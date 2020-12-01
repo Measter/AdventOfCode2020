@@ -36,8 +36,7 @@ fn main() -> Result<()> {
         .lines()
         .map(str::trim)
         .map(str::parse)
-        .collect::<Result<_, ParseIntError>>()
-        .unwrap();
+        .collect::<Result<_, ParseIntError>>()?;
 
     let start = std::time::Instant::now();
 
