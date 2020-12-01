@@ -55,7 +55,7 @@ fn main() -> Result<()> {
 }
 
 #[cfg(test)]
-mod tests_1519 {
+mod tests_2001 {
     use std::num::ParseIntError;
 
     use super::*;
