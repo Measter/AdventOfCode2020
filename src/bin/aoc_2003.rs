@@ -74,21 +74,11 @@ fn main() -> Result<()> {
     let input = std::fs::read_to_string("inputs/aoc_2003.txt")?;
     let map = Map::parse(&input)?;
 
-    run(map, &[&|map| map.count_trees(3, 1), &part2])?;
-
-    // let start = std::time::Instant::now();
-
-    // let part1 = map.count_trees(3, 1);
-    // let part2 = part2(&map);
-
-    // let elapsed = start.elapsed();
-
-    // println!("Part 1 output: {}", part1);
-    // println!("Part 2 output: {}", part2);
-
-    // println!("Elapsed: {}us", elapsed.as_micros());
-
-    Ok(())
+    run(
+        "Day 3: Toboggan Trajectory",
+        &map,
+        &[&|map| map.count_trees(3, 1), &part2],
+    )
 }
 
 #[cfg(test)]
@@ -111,7 +101,7 @@ mod tests_2003 {
 
         let map = Map::parse(input).unwrap();
 
-        assert_eq!(7, map.count_trees(3, 1));
+        assert_eq!(7, map.count_trees(3, 1).unwrap());
     }
 
     #[test]
@@ -141,7 +131,7 @@ mod tests_2003 {
         let mut product = 1;
 
         for (i, ((dx, dy), expected)) in slopes.iter().enumerate() {
-            let trees = map.count_trees(*dx, *dy);
+            let trees = map.count_trees(*dx, *dy).unwrap();
             product *= trees;
 
             assert_eq!(trees, *expected, "{}", i);

@@ -39,9 +39,11 @@ fn main() -> Result<()> {
         .map(str::parse)
         .collect::<Result<_, ParseIntError>>()?;
 
-    run(&inputs, &[&|i| part1(i, 2020), &|i| part2(i, 2020)])?;
-
-    Ok(())
+    run(
+        "Day 1: Report Repair",
+        inputs.as_slice(),
+        &[&|i| part1(i, 2020), &|i| part2(i, 2020)],
+    )
 }
 
 #[cfg(test)]

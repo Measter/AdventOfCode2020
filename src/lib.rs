@@ -7,17 +7,24 @@ use color_eyre::eyre::{eyre, Context, Result};
 
 pub mod nom;
 
-type PartFunction<Input, Output> = dyn Fn(&Input) -> Result<Output>;
+type PartFunction<Input, Output> = dyn Fn(Input) -> Result<Output>;
 
-pub fn run<Input, Output>(input: Input, parts: &[&PartFunction<Input, Output>]) -> Result<()>
+pub fn run<Input, Output>(
+    name: &str,
+    input: Input,
+    parts: &[&PartFunction<Input, Output>],
+) -> Result<()>
 where
     Output: Display,
+    Input: Copy,
 {
+    println!("{}\n", name);
+
     for (part, i) in parts.iter().zip(1..) {
         println!("-- Part {} --", i);
 
         let now = Instant::now();
-        let part_result = part(&input).with_context(|| eyre!("Error running Part {}", i))?;
+        let part_result = part(input).with_context(|| eyre!("Error running Part {}", i))?;
         let time = now.elapsed();
 
         println!("Result: {}", part_result);
@@ -33,7 +40,7 @@ where
 
         for _ in 0..total_runs {
             let start = Instant::now();
-            let _ = part(&input); // We'll just discard the result as we handled errors above.
+            let _ = part(input); // We'll just discard the result as we handled errors above.
             let elapsed = start.elapsed();
 
             total_time += start.elapsed();
@@ -47,7 +54,7 @@ where
         }
 
         println!(
-            "Time for {} runs: [{:?} .. {:?} .. {:?}]",
+            "Times for {} runs: [{:.3?} .. {:.3?} .. {:.3?}]",
             human_format::Formatter::new().format(total_runs as f64),
             min_run,
             total_time / total_runs,

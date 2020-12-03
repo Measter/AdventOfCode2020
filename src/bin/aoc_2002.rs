@@ -48,7 +48,7 @@ impl<'a> Password<'a> {
     }
 }
 
-fn part1(inputs: &Vec<Password>) -> Result<usize> {
+fn part1(inputs: &[Password]) -> Result<usize> {
     Ok(inputs
         .iter()
         .map(Password::part1_is_valid)
@@ -56,7 +56,7 @@ fn part1(inputs: &Vec<Password>) -> Result<usize> {
         .count())
 }
 
-fn part2(inputs: &Vec<Password>) -> Result<usize> {
+fn part2(inputs: &[Password]) -> Result<usize> {
     Ok(inputs
         .iter()
         .map(Password::part2_is_valid)
@@ -74,9 +74,11 @@ fn main() -> Result<()> {
         .map(Password::parse)
         .collect::<Result<_>>()?;
 
-    run(inputs, &[&part1, &part2])?;
-
-    Ok(())
+    run(
+        "Day 2: Password Philosophy",
+        inputs.as_slice(),
+        &[&part1, &part2],
+    )
 }
 
 #[cfg(test)]
