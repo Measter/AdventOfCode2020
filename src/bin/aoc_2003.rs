@@ -56,10 +56,7 @@ impl Map {
             trees += self.tiles[y * width + x] as u32;
 
             y += delta_y;
-            x += delta_x;
-            if x >= width {
-                x -= width;
-            }
+            x = (x + delta_x) % width;
         }
 
         trees
