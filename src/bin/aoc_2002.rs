@@ -1,4 +1,6 @@
-use advent_of_code_2020::nom::unsigned_number;
+#![allow(clippy::unnecessary_wraps, clippy::clippy::ptr_arg)]
+
+use advent_of_code_2020::{nom::unsigned_number, run};
 use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::{tag, take_till1, take_while1},
@@ -46,20 +48,20 @@ impl<'a> Password<'a> {
     }
 }
 
-fn part1(inputs: &[Password]) -> usize {
-    inputs
+fn part1(inputs: &Vec<Password>) -> Result<usize> {
+    Ok(inputs
         .iter()
         .map(Password::part1_is_valid)
         .filter(|p| *p)
-        .count()
+        .count())
 }
 
-fn part2(inputs: &[Password]) -> usize {
-    inputs
+fn part2(inputs: &Vec<Password>) -> Result<usize> {
+    Ok(inputs
         .iter()
         .map(Password::part2_is_valid)
         .filter(|p| *p)
-        .count()
+        .count())
 }
 
 fn main() -> Result<()> {
@@ -72,17 +74,7 @@ fn main() -> Result<()> {
         .map(Password::parse)
         .collect::<Result<_>>()?;
 
-    let start = std::time::Instant::now();
-
-    let part1 = part1(&inputs);
-    let part2 = part2(&inputs);
-
-    let elapsed = start.elapsed();
-
-    println!("Part 1 output: {}", part1);
-    println!("Part 2 output: {}", part2);
-
-    println!("Elapsed: {}us", elapsed.as_micros());
+    run(inputs, &[&part1, &part2])?;
 
     Ok(())
 }

@@ -1,31 +1,32 @@
 use std::num::ParseIntError;
 
+use advent_of_code_2020::run;
 use color_eyre::eyre::{eyre, Result};
 
-fn part1(inputs: &[u32], target: u32) -> Option<u32> {
+fn part1(inputs: &[u32], target: u32) -> Result<u32> {
     for (i, lhs) in inputs.iter().enumerate() {
         for rhs in &inputs[i..] {
             if rhs + lhs == target {
-                return Some(rhs * lhs);
+                return Ok(rhs * lhs);
             }
         }
     }
 
-    None
+    Err(eyre!("Unable to find result"))
 }
 
-fn part2(inputs: &[u32], target: u32) -> Option<u32> {
+fn part2(inputs: &[u32], target: u32) -> Result<u32> {
     for (i, lhs) in inputs.iter().enumerate() {
         for (i, mhs) in inputs[i..].iter().enumerate() {
             for rhs in &inputs[i..] {
                 if rhs + mhs + lhs == target {
-                    return Some(rhs * mhs * lhs);
+                    return Ok(rhs * mhs * lhs);
                 }
             }
         }
     }
 
-    None
+    Err(eyre!("Unable to find result"))
 }
 
 fn main() -> Result<()> {
@@ -38,17 +39,7 @@ fn main() -> Result<()> {
         .map(str::parse)
         .collect::<Result<_, ParseIntError>>()?;
 
-    let start = std::time::Instant::now();
-
-    let part1 = part1(&inputs, 2020).ok_or_else(|| eyre!("Unable to find part 1 answer"))?;
-    let part2 = part2(&inputs, 2020).ok_or_else(|| eyre!("Unable to find part 2 answer"))?;
-
-    let elapsed = start.elapsed();
-
-    println!("Part 1 output: {}", part1);
-    println!("Part 2 output: {}", part2);
-
-    println!("Elapsed: {}us", elapsed.as_micros());
+    run(&inputs, &[&|i| part1(i, 2020), &|i| part2(i, 2020)])?;
 
     Ok(())
 }
@@ -75,7 +66,7 @@ mod tests_2001 {
             .collect::<Result<_, ParseIntError>>()
             .unwrap();
 
-        assert_eq!(Some(514579), part1(&inputs, 2020));
+        assert_eq!(514579, part1(&inputs, 2020).unwrap());
     }
 
     #[test]
@@ -94,6 +85,6 @@ mod tests_2001 {
             .collect::<Result<_, ParseIntError>>()
             .unwrap();
 
-        assert_eq!(Some(241861950), part2(&inputs, 2020));
+        assert_eq!(241861950, part2(&inputs, 2020).unwrap());
     }
 }

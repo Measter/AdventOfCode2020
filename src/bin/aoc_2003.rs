@@ -1,3 +1,6 @@
+#![allow(clippy::unnecessary_wraps)]
+
+use advent_of_code_2020::run;
 use color_eyre::eyre::{eyre, Result};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -45,24 +48,24 @@ impl Map {
         }
     }
 
-    fn count_trees(&self, delta_x: usize, delta_y: usize) -> u32 {
+    fn count_trees(&self, delta_x: usize, delta_y: usize) -> Result<u32> {
         let width = self.tiles.len() / self.height;
 
-        (1..)
+        Ok((1..)
             .map(|y| y * delta_y)
             .take_while(|&y| y < self.height)
             .zip((1..).map(|x| (x * delta_x) % width))
             .map(|(y, x)| self.tiles[y * width + x] as u32)
-            .sum()
+            .sum())
     }
 }
 
-fn part2(map: &Map) -> u32 {
+fn part2(map: &Map) -> Result<u32> {
     [(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)]
         .iter()
         .copied()
         .map(|(dx, dy)| map.count_trees(dx, dy))
-        .product()
+        .try_fold(1, |acc, item| item.map(|i| acc * i))
 }
 
 fn main() -> Result<()> {
@@ -71,17 +74,19 @@ fn main() -> Result<()> {
     let input = std::fs::read_to_string("inputs/aoc_2003.txt")?;
     let map = Map::parse(&input)?;
 
-    let start = std::time::Instant::now();
+    run(map, &[&|map| map.count_trees(3, 1), &part2])?;
 
-    let part1 = map.count_trees(3, 1);
-    let part2 = part2(&map);
+    // let start = std::time::Instant::now();
 
-    let elapsed = start.elapsed();
+    // let part1 = map.count_trees(3, 1);
+    // let part2 = part2(&map);
 
-    println!("Part 1 output: {}", part1);
-    println!("Part 2 output: {}", part2);
+    // let elapsed = start.elapsed();
 
-    println!("Elapsed: {}us", elapsed.as_micros());
+    // println!("Part 1 output: {}", part1);
+    // println!("Part 2 output: {}", part2);
+
+    // println!("Elapsed: {}us", elapsed.as_micros());
 
     Ok(())
 }
