@@ -46,20 +46,14 @@ impl Map {
     }
 
     fn count_trees(&self, delta_x: usize, delta_y: usize) -> u32 {
-        let mut x = delta_x;
-        let mut y = delta_y;
         let width = self.tiles.len() / self.height;
 
-        let mut trees = 0;
-
-        while y < self.height {
-            trees += self.tiles[y * width + x] as u32;
-
-            y += delta_y;
-            x = (x + delta_x) % width;
-        }
-
-        trees
+        (1..)
+            .map(|y| y * delta_y)
+            .take_while(|&y| y < self.height)
+            .zip((1..).map(|x| (x * delta_x) % width))
+            .map(|(y, x)| self.tiles[y * width + x] as u32)
+            .sum()
     }
 }
 
