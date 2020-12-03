@@ -1,4 +1,4 @@
-use advent_of_code_2020::unsigned_number;
+use advent_of_code_2020::nom::unsigned_number;
 use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::{tag, take_till1, take_while1},
