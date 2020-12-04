@@ -40,7 +40,7 @@ where
             }
         }
 
-        let total_runs = (1.0 / min_run.as_secs_f64())
+        let total_runs = (10.0 / min_run.as_secs_f64())
             .ceil()
             .max(10.0)
             .min(u32::MAX as f64) as u32; // I doubt we'll actually *do* 4.2 billion runs...
@@ -64,12 +64,21 @@ where
             }
         }
 
+        let mean_run = total_time / total_runs;
+
+        let min_prec = if min_run.as_nanos() < 1000 { 0 } else { 3 };
+        let mean_prec = if mean_run.as_nanos() < 1000 { 0 } else { 3 };
+        let max_prec = if max_run.as_nanos() < 1000 { 0 } else { 3 };
+
         println!(
-            "Times for {} runs: [{:.3?} .. {:.3?} .. {:.3?}]",
+            "Times for {} runs: [{:.min_prec$?} .. {:.mean_prec$?} .. {:.max_prec$?}]",
             human_format::Formatter::new().format(total_runs as f64),
             min_run,
-            total_time / total_runs,
-            max_run
+            mean_run,
+            max_run,
+            min_prec = min_prec,
+            mean_prec = mean_prec,
+            max_prec = max_prec
         );
 
         println!();
