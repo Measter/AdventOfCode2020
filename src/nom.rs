@@ -1,3 +1,4 @@
+use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::{tag, take_while1},
     combinator::{map, opt},
@@ -27,4 +28,14 @@ where
     map(take_while1(|c: char| c.is_ascii_digit()), |num: &str| {
         num.parse::<F>()
     })(input)
+}
+
+pub fn split_pair<'a>(input: &'a str, delim: &str) -> Result<(&'a str, &'a str)> {
+    let mut parts = input.splitn(2, delim);
+
+    if let (Some(left), Some(right)) = (parts.next(), parts.next()) {
+        Ok((left, right))
+    } else {
+        Err(eyre!("Delimiter `{}` not found in `{}`", delim, input))
+    }
 }
