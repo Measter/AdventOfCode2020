@@ -1,6 +1,5 @@
 use std::num::ParseIntError;
 
-use advent_of_code_2020::run;
 use color_eyre::eyre::{eyre, Result};
 
 fn part1(inputs: &[u32], target: u32) -> Result<u32> {
@@ -39,7 +38,7 @@ fn main() -> Result<()> {
         .map(str::parse)
         .collect::<Result<_, ParseIntError>>()?;
 
-    run(
+    aoc_lib::run(
         "Day 1: Report Repair",
         inputs.as_slice(),
         &|i| part1(i, 2020),

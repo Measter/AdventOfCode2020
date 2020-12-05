@@ -7,6 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-color-eyre = "0.5.7"
-human_format = "1.0.3"
+aoc_lib = { git = "https://github.com/Measter/aoc_lib" }
+color-eyre = "0.5.10"
 nom = "6.0.1"

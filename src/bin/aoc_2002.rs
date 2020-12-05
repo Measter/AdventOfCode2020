@@ -1,6 +1,6 @@
 #![allow(clippy::unnecessary_wraps, clippy::clippy::ptr_arg)]
 
-use advent_of_code_2020::{nom::unsigned_number, run};
+use aoc_lib::parsers::unsigned_number;
 use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::{tag, take_till1, take_while1},
@@ -74,7 +74,7 @@ fn main() -> Result<()> {
         .map(Password::parse)
         .collect::<Result<_>>()?;
 
-    run(
+    aoc_lib::run(
         "Day 2: Password Philosophy",
         inputs.as_slice(),
         &part1,

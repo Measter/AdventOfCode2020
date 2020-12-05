@@ -1,4 +1,3 @@
-use advent_of_code_2020::run;
 use color_eyre::eyre::{eyre, Report, Result};
 
 fn get_seat_row(input: &str) -> Result<(u16, u16)> {
@@ -74,7 +73,7 @@ fn main() -> Result<()> {
 
     let input = std::fs::read_to_string("inputs/aoc_2005.txt")?;
 
-    run("Day 5: Binary Boarding", &*input, &part1, &part2)
+    aoc_lib::run("Day 5: Binary Boarding", &*input, &part1, &part2)
 }
 
 #[cfg(test)]

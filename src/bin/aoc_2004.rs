@@ -1,6 +1,6 @@
 use std::num::ParseIntError;
 
-use advent_of_code_2020::{nom::split_pair, run};
+use aoc_lib::parsers::split_pair;
 use color_eyre::eyre::{eyre, Result};
 use nom::bytes::complete::take_while;
 
@@ -109,7 +109,7 @@ fn main() -> Result<()> {
     let input = std::fs::read_to_string("inputs/aoc_2004.txt")?;
     let passports = Passport::parse_passports(&input)?;
 
-    run(
+    aoc_lib::run(
         "Day 4: Passport Processing",
         &passports,
         &|passports| Ok(passports.iter().filter(|p| p.is_valid_part1()).count()),

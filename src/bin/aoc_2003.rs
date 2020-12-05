@@ -1,6 +1,5 @@
 #![allow(clippy::unnecessary_wraps)]
 
-use advent_of_code_2020::run;
 use color_eyre::eyre::{eyre, Result};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -74,7 +73,7 @@ fn main() -> Result<()> {
     let input = std::fs::read_to_string("inputs/aoc_2003.txt")?;
     let map = Map::parse(&input)?;
 
-    run(
+    aoc_lib::run(
         "Day 3: Toboggan Trajectory",
         &map,
         &|map| map.count_trees(3, 1),
