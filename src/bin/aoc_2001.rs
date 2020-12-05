@@ -42,7 +42,8 @@ fn main() -> Result<()> {
     run(
         "Day 1: Report Repair",
         inputs.as_slice(),
-        &[&|i| part1(i, 2020), &|i| part2(i, 2020)],
+        &|i| part1(i, 2020),
+        &|i| part2(i, 2020),
     )
 }
 

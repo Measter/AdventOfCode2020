@@ -112,10 +112,8 @@ fn main() -> Result<()> {
     run(
         "Day 4: Passport Processing",
         &passports,
-        &[
-            &|passports| Ok(passports.iter().filter(|p| p.is_valid_part1()).count()),
-            &|passports| Ok(passports.iter().filter(|p| p.is_valid_part2()).count()),
-        ],
+        &|passports| Ok(passports.iter().filter(|p| p.is_valid_part1()).count()),
+        &|passports| Ok(passports.iter().filter(|p| p.is_valid_part2()).count()),
     )
 }
 

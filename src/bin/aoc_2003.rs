@@ -77,7 +77,8 @@ fn main() -> Result<()> {
     run(
         "Day 3: Toboggan Trajectory",
         &map,
-        &[&|map| map.count_trees(3, 1), &part2],
+        &|map| map.count_trees(3, 1),
+        &part2,
     )
 }
 

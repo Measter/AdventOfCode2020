@@ -77,7 +77,8 @@ fn main() -> Result<()> {
     run(
         "Day 2: Password Philosophy",
         inputs.as_slice(),
-        &[&part1, &part2],
+        &part1,
+        &part2,
     )
 }
 
