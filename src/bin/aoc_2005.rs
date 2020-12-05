@@ -1,5 +1,3 @@
-use std::collections::BTreeSet;
-
 use advent_of_code_2020::run;
 use color_eyre::eyre::{eyre, Report, Result};
 
@@ -54,19 +52,21 @@ impl<T: std::fmt::Debug> std::fmt::Display for DebugToDisplay<T> {
     }
 }
 
-fn part2(input: &str) -> Result<DebugToDisplay<BTreeSet<u16>>> {
-    let mut seats: BTreeSet<u16> = (0..=1023).collect();
-
-    let ids = input
+fn part2(input: &str) -> Result<u16> {
+    let mut seats: Vec<_> = input
         .lines()
         .map(str::trim)
-        .map(|l| get_seat_row(l).map(seat_id));
+        .map(|l| get_seat_row(l).map(seat_id))
+        .collect::<Result<_>>()?;
 
-    for id in ids {
-        seats.remove(&id?);
-    }
+    seats.sort_unstable();
 
-    Ok(DebugToDisplay(seats))
+    seats
+        .windows(2)
+        .filter(|pair| pair[1] - pair[0] != 1)
+        .map(|pair| pair[0] + 1)
+        .next()
+        .ok_or_else(|| eyre!("Seat not found"))
 }
 
 fn main() -> Result<()> {
