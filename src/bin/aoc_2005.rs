@@ -43,14 +43,6 @@ fn part1(input: &str) -> Result<u16> {
     Ok(max)
 }
 
-struct DebugToDisplay<T: std::fmt::Debug>(T);
-
-impl<T: std::fmt::Debug> std::fmt::Display for DebugToDisplay<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.0)
-    }
-}
-
 fn part2(input: &str) -> Result<u16> {
     let mut seats: Vec<_> = input
         .lines()
