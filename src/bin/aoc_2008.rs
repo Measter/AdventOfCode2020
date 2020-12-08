@@ -81,8 +81,8 @@ impl Computer {
     }
 }
 
-fn part1(instrs: &[Instruction], computer: &mut Computer) -> Result<i64> {
-    let mut seen_pc = HashSet::new();
+fn part1(instrs: &[Instruction], computer: &mut Computer, seen_pc: &mut HashSet::<usize>) -> Result<i64> {
+    seen_pc.clear();
 
     while seen_pc.insert(computer.pc) {
         computer.step(&instrs)?;
@@ -93,6 +93,7 @@ fn part1(instrs: &[Instruction], computer: &mut Computer) -> Result<i64> {
 
 fn part2(instrs: &[Instruction]) -> Result<i64> {
     let mut local_instrs = instrs.to_owned();
+    let mut seen_pc = HashSet::new();
 
     let instrs_to_swap = instrs
         .iter()
@@ -104,7 +105,7 @@ fn part2(instrs: &[Instruction]) -> Result<i64> {
         local_instrs[idx].swap_nop_jmp();
 
         let mut computer = Computer::default();
-        match part1(&local_instrs, &mut computer) {
+        match part1(&local_instrs, &mut computer, &mut seen_pc) {
             Ok(_) => {
                 // It got into an infinite loop, so this program is wrong.
             }
@@ -130,7 +131,8 @@ fn main() -> Result<()> {
         &*instrs,
         &|i| {
             let mut computer = Computer::default();
-            part1(i, &mut computer)
+            let mut seen_pc = HashSet::new();
+            part1(i, &mut computer, &mut seen_pc)
         },
         &part2,
     )
@@ -171,9 +173,10 @@ mod tests_2008 {
 
         let instrs = Instruction::parse(&input).unwrap();
         let mut computer = Computer::default();
+        let mut seen_pc = HashSet::new();
 
         let expected = 5;
-        let actual = part1(&instrs, &mut computer).unwrap();
+        let actual = part1(&instrs, &mut computer, &mut seen_pc).unwrap();
 
         assert_eq!(expected, actual);
     }
