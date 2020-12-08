@@ -1,6 +1,10 @@
 use std::num::ParseIntError;
 
+use aoc_lib::TracingAlloc;
 use color_eyre::eyre::{eyre, Result};
+
+#[global_allocator]
+static ALLOC: TracingAlloc = TracingAlloc::new();
 
 fn part1(inputs: &[u32], target: u32) -> Result<u32> {
     for (i, lhs) in inputs.iter().enumerate() {
@@ -39,6 +43,7 @@ fn main() -> Result<()> {
         .collect::<Result<_, ParseIntError>>()?;
 
     aoc_lib::run(
+        &ALLOC,
         "Day 1: Report Repair",
         inputs.as_slice(),
         &|i| part1(i, 2020),

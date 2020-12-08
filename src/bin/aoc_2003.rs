@@ -1,7 +1,10 @@
 #![allow(clippy::unnecessary_wraps)]
 
+use aoc_lib::TracingAlloc;
 use color_eyre::eyre::{eyre, Result};
 
+#[global_allocator]
+static ALLOC: TracingAlloc = TracingAlloc::new();
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Tile {
     Open = 0,
@@ -74,6 +77,7 @@ fn main() -> Result<()> {
     let map = Map::parse(&input)?;
 
     aoc_lib::run(
+        &ALLOC,
         "Day 3: Toboggan Trajectory",
         &map,
         &|map| map.count_trees(3, 1),

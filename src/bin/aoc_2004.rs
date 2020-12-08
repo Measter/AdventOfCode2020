@@ -1,8 +1,11 @@
 use std::num::ParseIntError;
 
-use aoc_lib::parsers::split_pair;
+use aoc_lib::{parsers::split_pair, TracingAlloc};
 use color_eyre::eyre::{eyre, Result};
 use nom::bytes::complete::take_while;
+
+#[global_allocator]
+static ALLOC: TracingAlloc = TracingAlloc::new();
 
 #[derive(Debug, PartialEq, Default)]
 struct Passport<'a> {
@@ -110,6 +113,7 @@ fn main() -> Result<()> {
     let passports = Passport::parse_passports(&input)?;
 
     aoc_lib::run(
+        &ALLOC,
         "Day 4: Passport Processing",
         &passports,
         &|passports| Ok(passports.iter().filter(|p| p.is_valid_part1()).count()),

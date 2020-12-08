@@ -1,6 +1,10 @@
 use std::collections::HashSet;
 
+use aoc_lib::TracingAlloc;
 use color_eyre::eyre::Result;
+
+#[global_allocator]
+static ALLOC: TracingAlloc = TracingAlloc::new();
 
 fn part1(input: &str) -> Result<usize> {
     let groups = input.split("\n\n");
@@ -51,7 +55,7 @@ fn main() -> Result<()> {
 
     let input = std::fs::read_to_string("inputs/aoc_2006.txt")?;
 
-    aoc_lib::run("Day 6: Custom Customs", &*input, &part1, &part2)
+    aoc_lib::run(&ALLOC, "Day 6: Custom Customs", &*input, &part1, &part2)
 }
 
 #[cfg(test)]

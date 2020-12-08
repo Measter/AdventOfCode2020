@@ -1,11 +1,14 @@
 #![allow(clippy::unnecessary_wraps, clippy::clippy::ptr_arg)]
 
-use aoc_lib::parsers::unsigned_number;
+use aoc_lib::{parsers::unsigned_number, TracingAlloc};
 use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::{tag, take_till1, take_while1},
     sequence::tuple,
 };
+
+#[global_allocator]
+static ALLOC: TracingAlloc = TracingAlloc::new();
 
 #[derive(Debug, PartialEq)]
 struct Password<'a> {
@@ -75,6 +78,7 @@ fn main() -> Result<()> {
         .collect::<Result<_>>()?;
 
     aoc_lib::run(
+        &ALLOC,
         "Day 2: Password Philosophy",
         inputs.as_slice(),
         &part1,

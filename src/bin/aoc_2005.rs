@@ -1,4 +1,8 @@
+use aoc_lib::TracingAlloc;
 use color_eyre::eyre::{eyre, Report, Result};
+
+#[global_allocator]
+static ALLOC: TracingAlloc = TracingAlloc::new();
 
 fn get_seat_row(input: &str) -> Result<(u16, u16)> {
     let (row, seat) = input.split_at(7);
@@ -65,7 +69,7 @@ fn main() -> Result<()> {
 
     let input = std::fs::read_to_string("inputs/aoc_2005.txt")?;
 
-    aoc_lib::run("Day 5: Binary Boarding", &*input, &part1, &part2)
+    aoc_lib::run(&ALLOC, "Day 5: Binary Boarding", &*input, &part1, &part2)
 }
 
 #[cfg(test)]

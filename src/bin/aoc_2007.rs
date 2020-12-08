@@ -1,12 +1,15 @@
 use std::collections::{HashMap, HashSet};
 
-use aoc_lib::parsers::unsigned_number;
+use aoc_lib::{parsers::unsigned_number, TracingAlloc};
 use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::{tag, take_until},
     error::ErrorKind,
     sequence::tuple,
 };
+
+#[global_allocator]
+static ALLOC: TracingAlloc = TracingAlloc::new();
 
 fn parse_bags(input: &str) -> Result<HashMap<&str, HashMap<&str, usize>>> {
     let mut bags = HashMap::new();
@@ -76,6 +79,7 @@ fn main() -> Result<()> {
     let rules = parse_bags(&input)?;
 
     aoc_lib::run(
+        &ALLOC,
         "Day 7: Handy Haversacks",
         &rules,
         &|bag_rules| part1(bag_rules, "shiny gold"),
