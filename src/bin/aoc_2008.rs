@@ -81,7 +81,11 @@ impl Computer {
     }
 }
 
-fn part1(instrs: &[Instruction], computer: &mut Computer, seen_pc: &mut HashSet::<usize>) -> Result<i64> {
+fn part1(
+    instrs: &[Instruction],
+    computer: &mut Computer,
+    seen_pc: &mut HashSet<usize>,
+) -> Result<i64> {
     seen_pc.clear();
 
     while seen_pc.insert(computer.pc) {
