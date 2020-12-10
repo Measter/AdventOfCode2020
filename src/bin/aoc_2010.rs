@@ -11,10 +11,10 @@ fn part1(adaptors: &[u64]) -> Result<u64> {
     let mut diffs = HashMap::<u64, u64>::new();
 
     for diff in adaptors.windows(2).map(|pair| pair[1] - pair[0]) {
-        *diffs.entry(diff).or_default() += 1
+        *diffs.entry(diff).or_insert(1) += 1
     }
 
-    Ok((diffs.get(&1).unwrap_or(&0) + 1) * (diffs.get(&3).unwrap_or(&0) + 1))
+    Ok(diffs.get(&1).unwrap_or(&0) * diffs.get(&3).unwrap_or(&0))
 }
 
 fn part2_search(adaptors: &[u64], db: &mut HashMap<u64, u64>) -> u64 {
