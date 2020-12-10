@@ -27,21 +27,16 @@ fn part2_search(adaptors: &[u64], db: &mut HashMap<u64, u64>) -> u64 {
     if rest.is_empty() {
         1
     } else {
-        let nexts = rest.iter().take_while(|a| *a - first <= 3).enumerate();
-
-        let mut count = 0;
-
-        for (idx, val) in nexts {
-            if let Some(sub_count) = db.get(val) {
-                count += sub_count;
-            } else {
-                let sub_count = part2_search(&rest[idx..], db);
-                db.insert(*val, sub_count);
-                count += sub_count;
-            }
-        }
-
-        count
+        rest.iter()
+            .take_while(|a| *a - first <= 3)
+            .enumerate()
+            .map(|(idx, val)| {
+                db.get(val).copied().unwrap_or_else(|| {
+                    let sub_count = part2_search(&rest[idx..], db);
+                    *db.entry(*val).or_insert(sub_count)
+                })
+            })
+            .sum()
     }
 }
 
