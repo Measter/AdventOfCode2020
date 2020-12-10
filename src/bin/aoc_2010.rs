@@ -1,5 +1,5 @@
 use aoc_lib::TracingAlloc;
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::eyre::Result;
 
 use std::collections::HashMap;
 use std::num::ParseIntError;
