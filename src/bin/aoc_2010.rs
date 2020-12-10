@@ -57,7 +57,8 @@ fn part2(adaptors: &[u64]) -> Result<u64> {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let input = std::fs::read_to_string("inputs/aoc_2010.txt")?;
+    let input = aoc_lib::input(2020, 10).open()?;
+
     let mut adaptors: Vec<u64> = input
         .lines()
         .map(str::trim)
@@ -81,17 +82,7 @@ mod tests_2010 {
 
     #[test]
     fn part1_example1() {
-        let input = "16
-        10
-        15
-        5
-        1
-        11
-        7
-        19
-        6
-        12
-        4";
+        let input = aoc_lib::input(2020, 10).example(1, 1).open().unwrap();
 
         let mut adaptors: Vec<u64> = input
             .lines()
@@ -110,37 +101,7 @@ mod tests_2010 {
 
     #[test]
     fn part1_example2() {
-        let input = "28
-        33
-        18
-        42
-        31
-        14
-        46
-        20
-        48
-        47
-        24
-        23
-        49
-        45
-        19
-        38
-        39
-        11
-        1
-        32
-        25
-        35
-        8
-        17
-        7
-        9
-        4
-        2
-        34
-        10
-        3";
+        let input = aoc_lib::input(2020, 10).example(1, 2).open().unwrap();
 
         let mut adaptors: Vec<u64> = input
             .lines()
@@ -159,17 +120,7 @@ mod tests_2010 {
 
     #[test]
     fn part2_example1() {
-        let input = "16
-        10
-        15
-        5
-        1
-        11
-        7
-        19
-        6
-        12
-        4";
+        let input = aoc_lib::input(2020, 10).example(1, 1).open().unwrap();
 
         let mut adaptors: Vec<u64> = input
             .lines()
@@ -188,37 +139,7 @@ mod tests_2010 {
 
     #[test]
     fn part2_example2() {
-        let input = "28
-        33
-        18
-        42
-        31
-        14
-        46
-        20
-        48
-        47
-        24
-        23
-        49
-        45
-        19
-        38
-        39
-        11
-        1
-        32
-        25
-        35
-        8
-        17
-        7
-        9
-        4
-        2
-        34
-        10
-        3";
+        let input = aoc_lib::input(2020, 10).example(1, 2).open().unwrap();
 
         let mut adaptors: Vec<u64> = input
             .lines()

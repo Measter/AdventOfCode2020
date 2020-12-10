@@ -35,7 +35,7 @@ fn part2(inputs: &[u32], target: u32) -> Result<u32> {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let input = std::fs::read_to_string("inputs/aoc_2001.txt")?;
+    let input = aoc_lib::input(2020, 1).open()?;
     let inputs: Vec<_> = input
         .lines()
         .map(str::trim)
@@ -59,12 +59,7 @@ mod tests_2001 {
 
     #[test]
     fn part1_example() {
-        let input = "1721
-        979
-        366
-        299
-        675
-        1456";
+        let input = aoc_lib::input(2020, 1).example(1, 1).open().unwrap();
 
         let inputs: Vec<_> = input
             .lines()
@@ -78,12 +73,7 @@ mod tests_2001 {
 
     #[test]
     fn part2_example() {
-        let input = "1721
-        979
-        366
-        299
-        675
-        1456";
+        let input = aoc_lib::input(2020, 1).example(1, 1).open().unwrap();
 
         let inputs: Vec<_> = input
             .lines()

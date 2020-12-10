@@ -47,7 +47,7 @@ fn part2(input: &[u64], preamble_len: usize) -> Result<u64> {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let input = std::fs::read_to_string("inputs/aoc_2009.txt")?;
+    let input = aoc_lib::input(2020, 9).open()?;
     let sequence: Vec<_> = input
         .lines()
         .map(str::trim)
@@ -69,26 +69,7 @@ mod tests_2009 {
 
     #[test]
     fn part1_example() {
-        let input = "35
-        20
-        15
-        25
-        47
-        40
-        62
-        55
-        65
-        95
-        102
-        117
-        150
-        182
-        127
-        219
-        299
-        277
-        309
-        576";
+        let input = aoc_lib::input(2020, 9).example(1, 1).open().unwrap();
 
         let parsed: Vec<_> = input
             .lines()
@@ -104,26 +85,7 @@ mod tests_2009 {
 
     #[test]
     fn part2_example() {
-        let input = "35
-        20
-        15
-        25
-        47
-        40
-        62
-        55
-        65
-        95
-        102
-        117
-        150
-        182
-        127
-        219
-        299
-        277
-        309
-        576";
+        let input = aoc_lib::input(2020, 9).example(1, 1).open().unwrap();
 
         let parsed: Vec<_> = input
             .lines()

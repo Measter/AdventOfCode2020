@@ -53,7 +53,7 @@ fn part2(input: &str) -> Result<usize> {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let input = std::fs::read_to_string("inputs/aoc_2006.txt")?;
+    let input = aoc_lib::input(2020, 6).open()?;
 
     aoc_lib::run(&ALLOC, "Day 6: Custom Customs", &*input, &part1, &part2)
 }
@@ -64,21 +64,7 @@ mod tests_2006 {
 
     #[test]
     fn part1_example() {
-        let input = "abc
-
-        a
-        b
-        c
-
-        ab
-        ac
-
-        a
-        a
-        a
-        a
-
-        b";
+        let input = aoc_lib::input(2020, 6).example(1, 1).open().unwrap();
 
         let expected = 11;
         let actual = part1(&input).unwrap();
@@ -88,21 +74,7 @@ mod tests_2006 {
 
     #[test]
     fn part2_example() {
-        let input = "abc
-
-        a
-        b
-        c
-
-        ab
-        ac
-
-        a
-        a
-        a
-        a
-
-        b";
+        let input = aoc_lib::input(2020, 6).example(1, 1).open().unwrap();
 
         let expected = 6;
         let actual = part2(&input).unwrap();

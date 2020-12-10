@@ -73,7 +73,7 @@ fn part2(map: &Map) -> Result<u32> {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let input = std::fs::read_to_string("inputs/aoc_2003.txt")?;
+    let input = aoc_lib::input(2020, 3).open()?;
     let map = Map::parse(&input)?;
 
     aoc_lib::run(
@@ -91,36 +91,15 @@ mod tests_2003 {
 
     #[test]
     fn part1_example() {
-        let input = "..##.......
-        #...#...#..
-        .#....#..#.
-        ..#.#...#.#
-        .#...##..#.
-        ..#.##.....
-        .#.#.#....#
-        .#........#
-        #.##...#...
-        #...##....#
-        .#..#...#.#";
-
-        let map = Map::parse(input).unwrap();
+        let input = aoc_lib::input(2020, 3).example(1, 1).open().unwrap();
+        let map = Map::parse(&input).unwrap();
 
         assert_eq!(7, map.count_trees(3, 1).unwrap());
     }
 
     #[test]
     fn part2_example() {
-        let input = "..##.......
-        #...#...#..
-        .#....#..#.
-        ..#.#...#.#
-        .#...##..#.
-        ..#.##.....
-        .#.#.#....#
-        .#........#
-        #.##...#...
-        #...##....#
-        .#..#...#.#";
+        let input = aoc_lib::input(2020, 3).example(1, 1).open().unwrap();
 
         let slopes = [
             ((1, 1), 2),
@@ -130,7 +109,7 @@ mod tests_2003 {
             ((1, 2), 2),
         ];
 
-        let map = Map::parse(input).unwrap();
+        let map = Map::parse(&input).unwrap();
 
         let mut product = 1;
 

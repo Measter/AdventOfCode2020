@@ -126,7 +126,7 @@ fn part2(instrs: &[Instruction]) -> Result<i64> {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let input = std::fs::read_to_string("inputs/aoc_2008.txt")?;
+    let input = aoc_lib::input(2020, 8).open()?;
     let instrs: Vec<_> = Instruction::parse(&input)?;
 
     aoc_lib::run(
@@ -148,16 +148,10 @@ mod tests_2008 {
 
     #[test]
     fn parse_test() {
-        let input = "acc -1
-        acc +1
-        jmp -1
-        jmp +1
-        nop -1
-        nop +1";
-
         use Instruction::*;
         let expected = vec![Acc(-1), Acc(1), Jmp(-1), Jmp(1), Nop(-1), Nop(1)];
 
+        let input = aoc_lib::input(2020, 8).example(0, 1).open().unwrap();
         let actual = Instruction::parse(&input).unwrap();
 
         assert_eq!(expected, actual);
@@ -165,17 +159,9 @@ mod tests_2008 {
 
     #[test]
     fn part1_example() {
-        let input = "nop +0
-        acc +1
-        jmp +4
-        acc +3
-        jmp -3
-        acc -99
-        acc +1
-        jmp -4
-        acc +6";
-
+        let input = aoc_lib::input(2020, 8).example(1, 1).open().unwrap();
         let instrs = Instruction::parse(&input).unwrap();
+
         let mut computer = Computer::default();
         let mut seen_pc = HashSet::new();
 
@@ -187,16 +173,7 @@ mod tests_2008 {
 
     #[test]
     fn part2_example() {
-        let input = "nop +0
-        acc +1
-        jmp +4
-        acc +3
-        jmp -3
-        acc -99
-        acc +1
-        jmp -4
-        acc +6";
-
+        let input = aoc_lib::input(2020, 8).example(1, 1).open().unwrap();
         let instrs = Instruction::parse(&input).unwrap();
 
         let expected = 8;

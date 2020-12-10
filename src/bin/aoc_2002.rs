@@ -70,7 +70,7 @@ fn part2(inputs: &[Password]) -> Result<usize> {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let input = std::fs::read_to_string("inputs/aoc_2002.txt")?;
+    let input = aoc_lib::input(2020, 2).open()?;
     let inputs: Vec<_> = input
         .lines()
         .map(str::trim)
@@ -92,9 +92,7 @@ mod tests_2002 {
 
     #[test]
     fn parse_test() {
-        let input = "1-3 a: abcde
-        1-3 b: cdefg
-        2-9 c: ccccccccc";
+        let input = aoc_lib::input(2020, 2).example(1, 1).open().unwrap();
 
         let expected = vec![
             Password {

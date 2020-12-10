@@ -67,7 +67,7 @@ fn part2(input: &str) -> Result<u16> {
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let input = std::fs::read_to_string("inputs/aoc_2005.txt")?;
+    let input = aoc_lib::input(2020, 5).open()?;
 
     aoc_lib::run(&ALLOC, "Day 5: Binary Boarding", &*input, &part1, &part2)
 }
