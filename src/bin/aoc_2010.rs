@@ -1,33 +1,28 @@
 use aoc_lib::TracingAlloc;
 use color_eyre::eyre::Result;
 
-use std::collections::HashMap;
-use std::num::ParseIntError;
+use std::{collections::HashMap, num::ParseIntError};
 
 #[global_allocator]
 static ALLOC: TracingAlloc = TracingAlloc::new();
 
 fn part1(adaptors: &[u64]) -> Result<u64> {
-    let mut diffs = HashMap::<u64, u64>::new();
-
-    for diff in adaptors.windows(2).map(|pair| pair[1] - pair[0]) {
-        *diffs.entry(diff).or_insert(1) += 1
-    }
-
-    Ok(diffs.get(&1).unwrap_or(&0) * diffs.get(&3).unwrap_or(&0))
+    let [_, ones, _, threes] =
+        adaptors
+            .windows(2)
+            .map(|pair| pair[1] - pair[0])
+            .fold([1; 4], |mut counts, it| {
+                counts[it as usize] += 1;
+                counts
+            });
+    Ok(ones * threes)
 }
 
 fn part2_search(adaptors: &[u64], db: &mut HashMap<u64, u64>) -> u64 {
-    let (first, rest) = if let Some(v) = adaptors.split_first() {
-        v
-    } else {
-        return 0;
-    };
-
-    if rest.is_empty() {
-        1
-    } else {
-        rest.iter()
+    match adaptors.split_first() {
+        Some((_, [])) => 1,
+        Some((first, rest)) => rest
+            .iter()
             .take_while(|a| *a - first <= 3)
             .enumerate()
             .map(|(idx, val)| {
@@ -36,7 +31,8 @@ fn part2_search(adaptors: &[u64], db: &mut HashMap<u64, u64>) -> u64 {
                     *db.entry(*val).or_insert(sub_count)
                 })
             })
-            .sum()
+            .sum(),
+        None => 0, // Shouldn't get an empty list, but just in case...
     }
 }
 
