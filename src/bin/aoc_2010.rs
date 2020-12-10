@@ -41,10 +41,6 @@ fn part2_search(adaptors: &[u64], db: &mut HashMap<u64, u64>) -> u64 {
             }
         }
 
-        if *first == 46 {
-            dbg!(count);
-        }
-
         count
     }
 }
