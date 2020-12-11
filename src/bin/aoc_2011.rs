@@ -27,6 +27,7 @@ struct WaitingArea {
     floor_space: Vec<Tile>,
     buf: Vec<Tile>,
     width: usize,
+    height: usize,
 }
 
 impl WaitingArea {
@@ -46,6 +47,7 @@ impl WaitingArea {
             Err(eyre!("Input must be a rectangular grid"))
         } else {
             Ok(WaitingArea {
+                height: floor_space.len() / width,
                 buf: vec![Tile::Floor; floor_space.len()],
                 floor_space,
                 width,
@@ -53,16 +55,18 @@ impl WaitingArea {
         }
     }
 
-    fn get_neighbours(x: usize, y: usize, size: usize) -> [Option<usize>; 8] {
+    fn get_neighbours_part1(x: usize, y: usize, width: usize, height: usize) -> [Option<usize>; 8] {
+        let width = width as isize;
+        let height = height as isize;
+
         let neighbour = |rel_x: isize, rel_y: isize| -> Option<usize> {
-            let size = size as isize;
             let new_x = (x as isize) + rel_x;
             let new_y = (y as isize) + rel_y;
 
-            if new_x < 0 || new_x >= size || new_y < 0 || new_y >= size {
+            if new_x < 0 || new_x >= width || new_y < 0 || new_y >= height {
                 None
             } else {
-                Some((new_y * size + new_x) as usize)
+                Some((new_y * width + new_x) as usize)
             }
         };
 
@@ -78,7 +82,7 @@ impl WaitingArea {
         ]
     }
 
-    fn step(&mut self) {
+    fn step_part1(&mut self) {
         let buffer = &mut self.buf;
         let floor_space = &self.floor_space;
 
@@ -91,7 +95,7 @@ impl WaitingArea {
             let tiles = src_tiles.iter().zip(dst_tiles).enumerate();
 
             for (x, (src_tile, dst_tile)) in tiles {
-                let neighbours = WaitingArea::get_neighbours(x, y, self.width);
+                let neighbours = WaitingArea::get_neighbours_part1(x, y, self.width, self.height);
 
                 let filled_count = neighbours
                     .iter()
@@ -110,9 +114,81 @@ impl WaitingArea {
         std::mem::swap(&mut self.floor_space, &mut self.buf);
     }
 
-    fn run(&mut self) {
+    fn get_neighbours_part2(
+        floor: &[Tile],
+        x: usize,
+        y: usize,
+        width: usize,
+        height: usize,
+    ) -> [Option<usize>; 8] {
+        let width = width as isize;
+        let height = height as isize;
+
+        let neighbour = |rel_x: isize, rel_y: isize| -> Option<usize> {
+            let mut new_x = (x as isize) + rel_x;
+            let mut new_y = (y as isize) + rel_y;
+
+            loop {
+                let idx = (new_y * width + new_x) as usize;
+                if new_x < 0 || new_x >= width || new_y < 0 || new_y >= height {
+                    return None;
+                } else if floor[idx] != Tile::Floor {
+                    return Some(idx);
+                }
+
+                new_x += rel_x;
+                new_y += rel_y;
+            }
+        };
+
+        [
+            neighbour(-1, -1),
+            neighbour(0, -1),
+            neighbour(1, -1),
+            neighbour(-1, 0),
+            neighbour(1, 0),
+            neighbour(-1, 1),
+            neighbour(0, 1),
+            neighbour(1, 1),
+        ]
+    }
+
+    fn step_part2(&mut self) {
+        let buffer = &mut self.buf;
+        let floor_space = &self.floor_space;
+
+        let rows = floor_space
+            .chunks_exact(self.width)
+            .zip(buffer.chunks_exact_mut(self.width))
+            .enumerate();
+
+        for (y, (src_tiles, dst_tiles)) in rows {
+            let tiles = src_tiles.iter().zip(dst_tiles).enumerate();
+
+            for (x, (src_tile, dst_tile)) in tiles {
+                let neighbours =
+                    WaitingArea::get_neighbours_part2(floor_space, x, y, self.width, self.height);
+
+                let filled_count = neighbours
+                    .iter()
+                    .filter_map(|n| *n)
+                    .filter(|n| floor_space[*n] == Tile::Occupied)
+                    .count();
+
+                *dst_tile = match (src_tile, filled_count) {
+                    (Tile::Empty, 0) => Tile::Occupied,
+                    (Tile::Occupied, 5..=usize::MAX) => Tile::Empty,
+                    _ => *src_tile,
+                };
+            }
+        }
+
+        std::mem::swap(&mut self.floor_space, &mut self.buf);
+    }
+
+    fn run(&mut self, step_fn: impl Fn(&mut Self)) {
         while self.floor_space != self.buf {
-            self.step()
+            step_fn(self);
         }
     }
 
@@ -135,10 +211,14 @@ fn main() -> Result<()> {
         &*input,
         &|input| {
             let mut floor = WaitingArea::parse(input)?;
-            floor.run();
+            floor.run(WaitingArea::step_part1);
             Ok(floor.occupied_seats())
         },
-        &|_| Ok("Not Implemented"),
+        &|input| {
+            let mut floor = WaitingArea::parse(input)?;
+            floor.run(WaitingArea::step_part2);
+            Ok(floor.occupied_seats())
+        },
     )
 }
 
@@ -157,8 +237,8 @@ mod tests_2011 {
             ..
         } = WaitingArea::parse(&end_input).unwrap();
 
-        floor.step();
-        floor.step();
+        floor.step_part1();
+        floor.step_part1();
 
         assert_eq!(floor.floor_space, expected);
     }
@@ -174,9 +254,28 @@ mod tests_2011 {
             ..
         } = WaitingArea::parse(&end_input).unwrap();
 
-        floor.run();
+        floor.run(WaitingArea::step_part1);
 
         let expected_count = 37;
+        let actual = floor.occupied_seats();
+        assert_eq!(expected_count, actual);
+        assert_eq!(expected_tiles, floor.floor_space);
+    }
+
+    #[test]
+    fn part2_example_full_run() {
+        let input = aoc_lib::input(2020, 11).example(1, 1).open().unwrap();
+        let end_input = aoc_lib::input(2020, 11).example(2, 1).open().unwrap();
+
+        let mut floor = WaitingArea::parse(&input).unwrap();
+        let WaitingArea {
+            floor_space: expected_tiles,
+            ..
+        } = WaitingArea::parse(&end_input).unwrap();
+
+        floor.run(WaitingArea::step_part2);
+
+        let expected_count = 26;
         let actual = floor.occupied_seats();
         assert_eq!(expected_count, actual);
         assert_eq!(expected_tiles, floor.floor_space);
