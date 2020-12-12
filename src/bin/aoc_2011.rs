@@ -147,7 +147,11 @@ impl WaitingArea {
             .enumerate();
 
         for (y, (src_tiles, dst_tiles)) in rows {
-            let tiles = src_tiles.iter().zip(dst_tiles).enumerate();
+            let tiles = src_tiles
+                .iter()
+                .zip(dst_tiles)
+                .enumerate()
+                .filter(|(_, (t, _))| **t != Tile::Floor);
 
             for (x, (src_tile, dst_tile)) in tiles {
                 let filled_count = neighbour_fn(floor_space, x, y, self.width, self.height);
