@@ -50,29 +50,14 @@ fn part1(depart_time: u64, busses: &[Bus]) -> Result<u64> {
 }
 
 fn part2(busses: &[Bus]) -> Result<u64> {
-    let first_pair = busses
-        .get(..2)
-        .ok_or_else(|| eyre!("Need at least 2 buses"))?;
+    let mut start = 1;
+    let mut step = 1;
 
-    let first = first_pair[0];
-    let second = first_pair[1];
-
-    let mut start = 0;
-    let mut step = first.number * second.number;
-
-    // Brute forcing the first two shouldn't take long.
-    for i in 1..=(first.number * second.number) {
-        if (first.number * i + second.id) % second.number == 0 {
-            start = first.number * i;
-            break;
-        }
-    }
-
-    let mut remaining_busses = &busses[2..];
+    let mut remaining_busses = busses;
     while let [next, rest @ ..] = remaining_busses {
         remaining_busses = rest;
 
-        for i in (1..next.number).map(|n| n * step + start) {
+        for i in (0..next.number).map(|n| n * step + start) {
             if (i + next.id) % next.number == 0 {
                 start = i;
                 step *= next.number;
