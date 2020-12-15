@@ -7,7 +7,7 @@
 |Part 2|240889536|10.49 k|272.200µs|293.297µs|733.800µs|0 B|
 
 ## Day 2: Password Philosophy
-|Day 2|Result|N. Runs|Min|Mean|Max|Peak Mem.
+||Result|N. Runs|Min|Mean|Max|Peak Mem.
 |---|---|---|---|---|---|---|
 |Part 1|643|27.25 k|69.300µs|76.274µs|435.200µs|0 B|
 |Part 2|388|218.98 k|10.400µs|12.089µs|305.600µs|0 B|
