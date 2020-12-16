@@ -116,21 +116,19 @@ fn part2(data: &TicketData) -> Result<u64> {
             .take(data.my_ticket.len())
             .collect();
 
-    loop {
-        let mut did_advance = false;
-
-        // Check if any of the field values are out of the valid ranges, and remove them if they are.
-        for (name, [first, second]) in &data.validation_rules {
-            for ticket in &valid_tickets {
-                for (idx, field_value) in ticket.iter().enumerate() {
-                    if !first.contains(field_value) && !second.contains(field_value) {
-                        if field_tracker[idx].remove(name) {
-                            did_advance = true;
-                        }
-                    }
+    // Check if any of the field values are out of the valid ranges, and remove them if they are.
+    for (name, [first, second]) in &data.validation_rules {
+        for ticket in &valid_tickets {
+            for (idx, field_value) in ticket.iter().enumerate() {
+                if !first.contains(field_value) && !second.contains(field_value) {
+                    field_tracker[idx].remove(name);
                 }
             }
         }
+    }
+
+    loop {
+        let mut did_advance = false;
 
         // If we've narrowed one field down to a single possibility, remove it from the others.
         for i in 0..field_tracker.len() {
