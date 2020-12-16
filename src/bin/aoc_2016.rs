@@ -9,6 +9,7 @@ use aoc_lib::{
     TracingAlloc,
 };
 use color_eyre::eyre::{eyre, Result};
+use itertools::Itertools;
 use nom::{
     bytes::complete::{tag, take_till1},
     sequence::tuple,
@@ -86,16 +87,13 @@ impl<'a> TicketData<'a> {
         let invalids = self
             .nearby_tickets
             .iter()
-            .map(|t| {
-                t.iter()
-                    .map(|field| {
-                        self.validation_rules
-                            .values()
-                            .find(|[first, second]| first.contains(field) || second.contains(field))
-                            .map(|_| 0)
-                            .unwrap_or(*field)
-                    })
-                    .sum::<u64>()
+            .flat_map(|i| i.iter())
+            .map(|field| {
+                self.validation_rules
+                    .values()
+                    .find(|[first, second]| first.contains(field) || second.contains(field))
+                    .map(|_| 0)
+                    .unwrap_or(*field)
             })
             .sum();
 
@@ -117,14 +115,20 @@ fn part2(data: &TicketData) -> Result<u64> {
             .collect();
 
     // Check if any of the field values are out of the valid ranges, and remove them if they are.
-    for (name, [first, second]) in &data.validation_rules {
-        for ticket in &valid_tickets {
-            for (idx, field_value) in ticket.iter().enumerate() {
-                if !first.contains(field_value) && !second.contains(field_value) {
-                    field_tracker[idx].remove(name);
-                }
-            }
-        }
+    for ((name, [first, second]), ticket) in data
+        .validation_rules
+        .iter()
+        .cartesian_product(&valid_tickets)
+    {
+        ticket
+            .iter()
+            .zip(&mut field_tracker)
+            .filter(|(field_value, _)| {
+                !first.contains(field_value) && !second.contains(field_value)
+            })
+            .for_each(|(_, tracker)| {
+                tracker.remove(name);
+            });
     }
 
     loop {
@@ -132,14 +136,16 @@ fn part2(data: &TicketData) -> Result<u64> {
 
         // If we've narrowed one field down to a single possibility, remove it from the others.
         for i in 0..field_tracker.len() {
-            if field_tracker[i].len() == 1 {
-                let entry = *field_tracker[i].iter().next().unwrap();
-                for j in (0..field_tracker.len()).filter(|&j| j != i) {
-                    if field_tracker[j].remove(&entry) {
-                        did_advance = true;
-                    }
-                }
+            if field_tracker[i].len() != 1 {
+                continue;
             }
+            let entry = *field_tracker[i].iter().next().unwrap();
+
+            field_tracker
+                .iter_mut()
+                .enumerate()
+                .filter(|(j, _)| *j != i)
+                .for_each(|(_, field)| did_advance |= field.remove(&entry));
         }
 
         if !did_advance {
@@ -158,8 +164,12 @@ fn part2(data: &TicketData) -> Result<u64> {
     let result = field_tracker
         .iter()
         .zip(&data.my_ticket)
-        .filter(|(f, _)| matches!(f.iter().next(), Some(f) if f.starts_with("departure")))
-        .map(|(_, my_ticket)| *my_ticket)
+        .filter_map(|(f, ticket)| {
+            f.iter()
+                .next()
+                .filter(|f| f.starts_with("departure"))
+                .map(|_| *ticket)
+        })
         .product();
 
     Ok(result)
