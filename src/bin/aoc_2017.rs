@@ -1,29 +1,13 @@
-use std::{collections::HashMap, ops::RangeInclusive};
+use std::{collections::HashSet, ops::RangeInclusive};
 
 use aoc_lib::TracingAlloc;
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::eyre::Result;
 use itertools::Itertools;
 
 #[global_allocator]
 static ALLOC: TracingAlloc = TracingAlloc::new();
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum CubeState {
-    Active,
-    Inactive,
-}
-
-impl CubeState {
-    fn parse(ch: char) -> Result<CubeState> {
-        match ch {
-            '.' => Ok(CubeState::Inactive),
-            '#' => Ok(CubeState::Active),
-            _ => Err(eyre!("Invalid character: '{}'", ch)),
-        }
-    }
-}
-
-type Field = HashMap<(i32, i32, i32, i32), CubeState>;
+type Field = HashSet<(i32, i32, i32, i32)>;
 
 #[derive(Debug, Clone, Copy, Default)]
 struct Bounds {
@@ -62,9 +46,9 @@ impl GameField {
         for (line, y) in input.lines().zip(0..) {
             y_bounds.upper = y;
 
-            for (ch, x) in line.chars().zip(0..) {
+            for (_, x) in line.chars().zip(0..).filter(|(c, _)| *c == '#') {
                 x_bounds.upper = x;
-                state.insert((x, y, 0, 0), CubeState::parse(ch)?);
+                state.insert((x, y, 0, 0));
             }
         }
 
@@ -89,7 +73,6 @@ impl GameField {
             .map(|((rx, ry), rz)| (x + rx, y + ry, z + rz))
             .filter(|&(rx, ry, rz)| !(rx == x && ry == y && rz == z))
             .flat_map(|(x, y, z)| self.state.get(&(x, y, z, 0)))
-            .filter(|&&y| y == CubeState::Active)
             .count()
     }
 
@@ -113,14 +96,11 @@ impl GameField {
         for ((x, y), z) in coords {
             let neighbours = self.count_neighbours_3d(x, y, z);
 
-            let cube = *self
-                .state
-                .get(&(x, y, z, 0))
-                .unwrap_or(&CubeState::Inactive);
+            let cube = self.state.contains(&(x, y, z, 0));
 
             match (cube, neighbours) {
-                (CubeState::Active, 2..=3) | (CubeState::Inactive, 3) => {
-                    self.buf.insert((x, y, z, 0), CubeState::Active);
+                (true, 2..=3) | (false, 3) => {
+                    self.buf.insert((x, y, z, 0));
                     new_x_bounds.lower = new_x_bounds.lower.min(x);
                     new_x_bounds.upper = new_x_bounds.upper.max(x);
                     new_y_bounds.lower = new_y_bounds.lower.min(y);
@@ -152,7 +132,6 @@ impl GameField {
             .map(|(((rx, ry), rz), rw)| (x + rx, y + ry, z + rz, w + rw))
             .filter(|&(rx, ry, rz, rw)| !(rx == x && ry == y && rz == z && rw == w))
             .flat_map(|(x, y, z, w)| self.state.get(&(x, y, z, w)))
-            .filter(|&&y| y == CubeState::Active)
             .count()
     }
 
@@ -179,14 +158,11 @@ impl GameField {
         for (((x, y), z), w) in coords {
             let neighbours = self.count_neighbours_4d(x, y, z, w);
 
-            let cube = *self
-                .state
-                .get(&(x, y, z, w))
-                .unwrap_or(&CubeState::Inactive);
+            let cube = self.state.contains(&(x, y, z, w));
 
             match (cube, neighbours) {
-                (CubeState::Active, 2..=3) | (CubeState::Inactive, 3) => {
-                    self.buf.insert((x, y, z, w), CubeState::Active);
+                (true, 2..=3) | (false, 3) => {
+                    self.buf.insert((x, y, z, w));
                     new_x_bounds.lower = new_x_bounds.lower.min(x);
                     new_x_bounds.upper = new_x_bounds.upper.max(x);
                     new_y_bounds.lower = new_y_bounds.lower.min(y);
@@ -209,10 +185,7 @@ impl GameField {
     }
 
     fn count_active(&self) -> usize {
-        self.state
-            .values()
-            .filter(|&&s| s == CubeState::Active)
-            .count()
+        self.state.len()
     }
 }
 fn main() -> Result<()> {
