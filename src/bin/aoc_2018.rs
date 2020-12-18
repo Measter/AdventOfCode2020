@@ -5,11 +5,33 @@ use itertools::Itertools;
 #[global_allocator]
 static ALLOC: TracingAlloc = TracingAlloc::new();
 
+// A weird one, but simplifies some code later.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Function {
+    Add,
+    Multiply,
+}
+
+impl Function {
+    fn apply(self, a: u64, b: u64) -> u64 {
+        match self {
+            Function::Add => a + b,
+            Function::Multiply => a * b,
+        }
+    }
+
+    fn precedence(&self) -> u8 {
+        match self {
+            Function::Add => 2,
+            Function::Multiply => 1,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Operator {
     Number(u64),
-    Add,
-    Multiply,
+    Function(Function),
     OpenParens,
     CloseParens,
 }
@@ -21,8 +43,7 @@ impl Operator {
 
     fn precedence(&self) -> u8 {
         match self {
-            Operator::Add => 2,
-            Operator::Multiply => 1,
+            Operator::Function(f) => f.precedence(),
             _ => 0,
         }
     }
@@ -34,7 +55,7 @@ impl Operator {
         }
     }
 
-    fn parse_part1(line: &str) -> Result<Vec<Operator>> {
+    fn parse(line: &str, no_prec: bool) -> Result<Vec<Operator>> {
         let mut output = Vec::new();
         let mut op_stack = Vec::new();
 
@@ -52,85 +73,27 @@ impl Operator {
                 }
                 '(' => op_stack.push(Operator::OpenParens),
                 '+' => {
-                    if let Some(&op) = op_stack.last().filter(|o| !o.is_parens()) {
-                        output.push(op);
-                        op_stack.pop();
-                    }
-
-                    op_stack.push(Operator::Add);
-                }
-                '*' => {
-                    if let Some(&op) = op_stack.last().filter(|o| !o.is_parens()) {
-                        output.push(op);
-                        op_stack.pop();
-                    }
-
-                    op_stack.push(Operator::Multiply);
-                }
-                _ if ch.is_ascii_digit() => {
-                    let last_idx = if let Some((last_idx, _)) =
-                        chars.peeking_take_while(|(_, c)| c.is_ascii_digit()).last()
-                    {
-                        last_idx
-                    } else {
-                        idx
-                    };
-
-                    let number = line[idx..last_idx + 1].parse().unwrap();
-                    output.push(Operator::Number(number));
-                }
-                _ if ch.is_whitespace() => {}
-                _ => return Err(eyre!("Invalid character: {}", ch)),
-            }
-        }
-
-        op_stack.reverse();
-        output.extend(op_stack);
-
-        Ok(output)
-    }
-
-    fn parse_part2(line: &str) -> Result<Vec<Operator>> {
-        let mut output = Vec::new();
-        let mut op_stack = Vec::new();
-
-        let mut chars = line.char_indices().peekable();
-        while let Some((idx, ch)) = chars.next() {
-            match ch {
-                ')' => {
-                    while let Some(op) = op_stack.pop() {
-                        if op == Operator::OpenParens {
-                            break;
-                        }
-
-                        output.push(op);
-                    }
-                }
-                '(' => op_stack.push(Operator::OpenParens),
-                '+' => {
-                    if matches!(op_stack.last(), Some(op) if !op.is_parens() && Operator::Add.precedence() <= op.precedence())
+                    if matches!(op_stack.last(), Some(op) if !op.is_parens() && (no_prec || Function::Add.precedence() <= op.precedence()))
                     {
                         output.push(op_stack.pop().unwrap());
                     }
 
-                    op_stack.push(Operator::Add);
+                    op_stack.push(Operator::Function(Function::Add));
                 }
                 '*' => {
-                    if matches!(op_stack.last(), Some(op) if !op.is_parens() && Operator::Multiply.precedence() <= op.precedence())
+                    if matches!(op_stack.last(), Some(op) if !op.is_parens() && (no_prec || Function::Multiply.precedence() <= op.precedence()))
                     {
                         output.push(op_stack.pop().unwrap());
                     }
 
-                    op_stack.push(Operator::Multiply);
+                    op_stack.push(Operator::Function(Function::Multiply));
                 }
                 _ if ch.is_ascii_digit() => {
-                    let last_idx = if let Some((last_idx, _)) =
-                        chars.peeking_take_while(|(_, c)| c.is_ascii_digit()).last()
-                    {
-                        last_idx
-                    } else {
-                        idx
-                    };
+                    let last_idx = chars
+                        .peeking_take_while(|(_, c)| c.is_ascii_digit())
+                        .last()
+                        .map(|(idx, _)| idx)
+                        .unwrap_or(idx);
 
                     let number = line[idx..last_idx + 1].parse().unwrap();
                     output.push(Operator::Number(number));
@@ -152,34 +115,21 @@ impl Operator {
         loop {
             expr = match expr {
                 [] => break,
-                [Operator::Number(a), Operator::Number(b), Operator::Add, rest @ ..] => {
-                    stack.push(Operator::Number(a + b));
-                    rest
-                }
-                [Operator::Number(a), Operator::Number(b), Operator::Multiply, rest @ ..] => {
-                    stack.push(Operator::Number(a * b));
+                [Operator::Number(a), Operator::Number(b), Operator::Function(f), rest @ ..] => {
+                    stack.push(Operator::Number(f.apply(*a, *b)));
                     rest
                 }
                 [Operator::Number(a), rest @ ..] => {
                     stack.push(Operator::Number(*a));
                     rest
                 }
-                [Operator::Add, rest @ ..] => {
+                [Operator::Function(f), rest @ ..] => {
                     let (a, b) = stack
                         .pop()
-                        .and_then(|a| stack.pop().map(|b| (a, b)))
+                        .zip(stack.pop())
                         .ok_or_else(|| eyre!("Not enough values on stack"))?;
 
-                    stack.push(Operator::Number(a.value()? + b.value()?));
-                    rest
-                }
-                [Operator::Multiply, rest @ ..] => {
-                    let (a, b) = stack
-                        .pop()
-                        .and_then(|a| stack.pop().map(|b| (a, b)))
-                        .ok_or_else(|| eyre!("Not enough values on stack"))?;
-
-                    stack.push(Operator::Number(a.value()? * b.value()?));
+                    stack.push(Operator::Number(f.apply(a.value()?, b.value()?)));
                     rest
                 }
 
@@ -209,14 +159,14 @@ fn main() -> Result<()> {
         &|input| {
             let res = input
                 .lines()
-                .map(|l| Operator::parse_part1(l).and_then(|e| Operator::evaluate(&e)))
+                .map(|l| Operator::parse(l, true).and_then(|e| Operator::evaluate(&e)))
                 .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
             Ok(res)
         },
         &|input| {
             let res = input
                 .lines()
-                .map(|l| Operator::parse_part2(l).and_then(|e| Operator::evaluate(&e)))
+                .map(|l| Operator::parse(l, false).and_then(|e| Operator::evaluate(&e)))
                 .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
             Ok(res)
         },
@@ -232,19 +182,23 @@ mod tests_2018 {
     #[test]
     fn parse_test1() {
         let input = "31 + 2";
-        let expected = vec![Operator::Number(31), Operator::Number(2), Operator::Add];
-        let actual = Operator::parse_part1(input).unwrap();
+        let expected = vec![
+            Operator::Number(31),
+            Operator::Number(2),
+            Operator::Function(Function::Add),
+        ];
+        let actual = Operator::parse(input, true).unwrap();
         assert_eq!(expected, actual);
 
         let input = "31 + 2 * 5";
         let expected = vec![
             Operator::Number(31),
             Operator::Number(2),
-            Operator::Add,
+            Operator::Function(Function::Add),
             Operator::Number(5),
-            Operator::Multiply,
+            Operator::Function(Function::Multiply),
         ];
-        let actual = Operator::parse_part1(input).unwrap();
+        let actual = Operator::parse(input, true).unwrap();
         assert_eq!(expected, actual);
 
         let input = "3 + (2 * 5)";
@@ -252,10 +206,10 @@ mod tests_2018 {
             Operator::Number(3),
             Operator::Number(2),
             Operator::Number(5),
-            Operator::Multiply,
-            Operator::Add,
+            Operator::Function(Function::Multiply),
+            Operator::Function(Function::Add),
         ];
-        let actual = Operator::parse_part1(input).unwrap();
+        let actual = Operator::parse(input, true).unwrap();
         assert_eq!(expected, actual);
     }
 
@@ -265,18 +219,23 @@ mod tests_2018 {
 
         for line in input.lines() {
             let (expr, res) = split_pair(line, ";").unwrap();
-            let input = Operator::parse_part1(expr).unwrap();
+            let input = Operator::parse(expr, true).unwrap();
 
-            let expected: u32 = res.parse().unwrap();
-            let actual = Operator::evaluate(&input);
+            let expected: u64 = res.parse().unwrap();
+            let actual = Operator::evaluate(&input).unwrap();
+            assert_eq!(expected, actual);
         }
     }
 
     #[test]
     fn parse_test2() {
         let input = "31 + 2";
-        let expected = vec![Operator::Number(31), Operator::Number(2), Operator::Add];
-        let actual = Operator::parse_part2(input).unwrap();
+        let expected = vec![
+            Operator::Number(31),
+            Operator::Number(2),
+            Operator::Function(Function::Add),
+        ];
+        let actual = Operator::parse(input, false).unwrap();
         assert_eq!(expected, actual);
 
         let input = "5 * 2 + 31";
@@ -284,10 +243,10 @@ mod tests_2018 {
             Operator::Number(5),
             Operator::Number(2),
             Operator::Number(31),
-            Operator::Add,
-            Operator::Multiply,
+            Operator::Function(Function::Add),
+            Operator::Function(Function::Multiply),
         ];
-        let actual = Operator::parse_part2(input).unwrap();
+        let actual = Operator::parse(input, false).unwrap();
         assert_eq!(expected, actual);
 
         let input = "3 + (2 * 5)";
@@ -295,10 +254,10 @@ mod tests_2018 {
             Operator::Number(3),
             Operator::Number(2),
             Operator::Number(5),
-            Operator::Multiply,
-            Operator::Add,
+            Operator::Function(Function::Multiply),
+            Operator::Function(Function::Add),
         ];
-        let actual = Operator::parse_part2(input).unwrap();
+        let actual = Operator::parse(input, false).unwrap();
         assert_eq!(expected, actual);
     }
 
@@ -308,10 +267,11 @@ mod tests_2018 {
 
         for line in input.lines() {
             let (expr, res) = split_pair(line, ";").unwrap();
-            let input = Operator::parse_part2(expr).unwrap();
+            let input = Operator::parse(expr, false).unwrap();
 
-            let expected: u32 = res.parse().unwrap();
-            let actual = Operator::evaluate(&input);
+            let expected: u64 = res.parse().unwrap();
+            let actual = Operator::evaluate(&input).unwrap();
+            assert_eq!(expected, actual);
         }
     }
 }
