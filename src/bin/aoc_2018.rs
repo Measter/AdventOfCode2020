@@ -19,12 +19,17 @@ impl Function {
             Function::Multiply => a * b,
         }
     }
+}
 
-    fn precedence(&self) -> u8 {
-        match self {
-            Function::Add => 2,
-            Function::Multiply => 1,
-        }
+fn part1_precedence(_: char) -> u8 {
+    0
+}
+
+fn part2_precedence(ch: char) -> u8 {
+    match ch {
+        '+' => 2,
+        '*' => 1,
+        _ => 0,
     }
 }
 
@@ -32,61 +37,41 @@ impl Function {
 enum Operator {
     Number(u64),
     Function(Function),
-    OpenParens,
-    CloseParens,
 }
 
 impl Operator {
-    fn is_parens(&self) -> bool {
-        matches!(self, Operator::OpenParens | Operator::CloseParens)
-    }
-
-    fn precedence(&self) -> u8 {
-        match self {
-            Operator::Function(f) => f.precedence(),
-            _ => 0,
-        }
-    }
-
-    fn value(self) -> Result<u64> {
-        match self {
-            Operator::Number(a) => Ok(a),
-            _ => Err(eyre!("Expected Number")),
-        }
-    }
-
-    fn parse(line: &str, no_prec: bool) -> Result<Vec<Operator>> {
+    fn parse(line: &str, precedence: &dyn Fn(char) -> u8) -> Result<Vec<Operator>> {
         let mut output = Vec::new();
         let mut op_stack = Vec::new();
 
-        let mut chars = line.char_indices().peekable();
+        let mut chars = line
+            .char_indices()
+            .filter(|&(_, c)| !c.is_whitespace())
+            .peekable();
         while let Some((idx, ch)) = chars.next() {
             match ch {
                 ')' => {
                     while let Some(op) = op_stack.pop() {
-                        if op == Operator::OpenParens {
-                            break;
+                        match op {
+                            '(' => break,
+                            '+' => output.push(Operator::Function(Function::Add)),
+                            '*' => output.push(Operator::Function(Function::Multiply)),
+                            _ => unreachable!(),
                         }
-
-                        output.push(op);
                     }
                 }
-                '(' => op_stack.push(Operator::OpenParens),
-                '+' => {
-                    if matches!(op_stack.last(), Some(op) if !op.is_parens() && (no_prec || Function::Add.precedence() <= op.precedence()))
+                '(' => op_stack.push(ch),
+                '+' | '*' => {
+                    if matches!(op_stack.last(), Some(op) if *op != '(' && precedence(ch) <= precedence(*op))
                     {
-                        output.push(op_stack.pop().unwrap());
+                        match op_stack.pop().unwrap() {
+                            '+' => output.push(Operator::Function(Function::Add)),
+                            '*' => output.push(Operator::Function(Function::Multiply)),
+                            _ => unreachable!(),
+                        }
                     }
 
-                    op_stack.push(Operator::Function(Function::Add));
-                }
-                '*' => {
-                    if matches!(op_stack.last(), Some(op) if !op.is_parens() && (no_prec || Function::Multiply.precedence() <= op.precedence()))
-                    {
-                        output.push(op_stack.pop().unwrap());
-                    }
-
-                    op_stack.push(Operator::Function(Function::Multiply));
+                    op_stack.push(ch);
                 }
                 _ if ch.is_ascii_digit() => {
                     let last_idx = chars
@@ -98,13 +83,16 @@ impl Operator {
                     let number = line[idx..last_idx + 1].parse().unwrap();
                     output.push(Operator::Number(number));
                 }
-                _ if ch.is_whitespace() => {}
                 _ => return Err(eyre!("Invalid character: {}", ch)),
             }
         }
 
         op_stack.reverse();
-        output.extend(op_stack);
+        output.extend(op_stack.into_iter().map(|m| match m {
+            '+' => Operator::Function(Function::Add),
+            '*' => Operator::Function(Function::Multiply),
+            _ => unreachable!(),
+        }));
 
         Ok(output)
     }
@@ -116,11 +104,11 @@ impl Operator {
             expr = match expr {
                 [] => break,
                 [Operator::Number(a), Operator::Number(b), Operator::Function(f), rest @ ..] => {
-                    stack.push(Operator::Number(f.apply(*a, *b)));
+                    stack.push(f.apply(*a, *b));
                     rest
                 }
                 [Operator::Number(a), rest @ ..] => {
-                    stack.push(Operator::Number(*a));
+                    stack.push(*a);
                     rest
                 }
                 [Operator::Function(f), rest @ ..] => {
@@ -129,12 +117,8 @@ impl Operator {
                         .zip(stack.pop())
                         .ok_or_else(|| eyre!("Not enough values on stack"))?;
 
-                    stack.push(Operator::Number(f.apply(a.value()?, b.value()?)));
+                    stack.push(f.apply(a, b));
                     rest
-                }
-
-                [Operator::OpenParens, ..] | [Operator::CloseParens, ..] => {
-                    return Err(eyre!("Found invalid op"))
                 }
             }
         }
@@ -142,7 +126,7 @@ impl Operator {
         if stack.len() != 1 {
             Err(eyre!("Stack not empty"))
         } else {
-            Ok(stack.pop().map(Operator::value).transpose()?.unwrap())
+            Ok(stack.pop().unwrap())
         }
     }
 }
@@ -159,14 +143,14 @@ fn main() -> Result<()> {
         &|input| {
             let res = input
                 .lines()
-                .map(|l| Operator::parse(l, true).and_then(|e| Operator::evaluate(&e)))
+                .map(|l| Operator::parse(l, &part1_precedence).and_then(|e| Operator::evaluate(&e)))
                 .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
             Ok(res)
         },
         &|input| {
             let res = input
                 .lines()
-                .map(|l| Operator::parse(l, false).and_then(|e| Operator::evaluate(&e)))
+                .map(|l| Operator::parse(l, &part2_precedence).and_then(|e| Operator::evaluate(&e)))
                 .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
             Ok(res)
         },
@@ -187,7 +171,7 @@ mod tests_2018 {
             Operator::Number(2),
             Operator::Function(Function::Add),
         ];
-        let actual = Operator::parse(input, true).unwrap();
+        let actual = Operator::parse(input, &part1_precedence).unwrap();
         assert_eq!(expected, actual);
 
         let input = "31 + 2 * 5";
@@ -198,7 +182,7 @@ mod tests_2018 {
             Operator::Number(5),
             Operator::Function(Function::Multiply),
         ];
-        let actual = Operator::parse(input, true).unwrap();
+        let actual = Operator::parse(input, &part1_precedence).unwrap();
         assert_eq!(expected, actual);
 
         let input = "3 + (2 * 5)";
@@ -209,7 +193,7 @@ mod tests_2018 {
             Operator::Function(Function::Multiply),
             Operator::Function(Function::Add),
         ];
-        let actual = Operator::parse(input, true).unwrap();
+        let actual = Operator::parse(input, &part1_precedence).unwrap();
         assert_eq!(expected, actual);
     }
 
@@ -219,7 +203,7 @@ mod tests_2018 {
 
         for line in input.lines() {
             let (expr, res) = split_pair(line, ";").unwrap();
-            let input = Operator::parse(expr, true).unwrap();
+            let input = Operator::parse(expr, &part1_precedence).unwrap();
 
             let expected: u64 = res.parse().unwrap();
             let actual = Operator::evaluate(&input).unwrap();
@@ -235,7 +219,7 @@ mod tests_2018 {
             Operator::Number(2),
             Operator::Function(Function::Add),
         ];
-        let actual = Operator::parse(input, false).unwrap();
+        let actual = Operator::parse(input, &part2_precedence).unwrap();
         assert_eq!(expected, actual);
 
         let input = "5 * 2 + 31";
@@ -246,7 +230,7 @@ mod tests_2018 {
             Operator::Function(Function::Add),
             Operator::Function(Function::Multiply),
         ];
-        let actual = Operator::parse(input, false).unwrap();
+        let actual = Operator::parse(input, &part2_precedence).unwrap();
         assert_eq!(expected, actual);
 
         let input = "3 + (2 * 5)";
@@ -257,7 +241,7 @@ mod tests_2018 {
             Operator::Function(Function::Multiply),
             Operator::Function(Function::Add),
         ];
-        let actual = Operator::parse(input, false).unwrap();
+        let actual = Operator::parse(input, &part2_precedence).unwrap();
         assert_eq!(expected, actual);
     }
 
@@ -267,7 +251,7 @@ mod tests_2018 {
 
         for line in input.lines() {
             let (expr, res) = split_pair(line, ";").unwrap();
-            let input = Operator::parse(expr, false).unwrap();
+            let input = Operator::parse(expr, &part2_precedence).unwrap();
 
             let expected: u64 = res.parse().unwrap();
             let actual = Operator::evaluate(&input).unwrap();

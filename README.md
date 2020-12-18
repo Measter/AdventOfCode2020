@@ -99,8 +99,8 @@
 ## Day 17: Conway Cubes
 ||Result|N. Runs|Min|Mean|Max|Peak Mem.
 |---|---|---|---|---|---|---|
-|Part 1|289|308|9.590ms|9.938ms|17.400ms|21.8 KB|
-|Part 2|2084|10|325.079ms|327.689ms|332.355ms|174.1 KB|
+|Part 1|289|344|8.595ms|8.767ms|10.904ms|21.8 KB|
+|Part 2|2084|13|248.016ms|250.118ms|252.397ms|174.1 KB|
 
 ## Day 18: Operation Order
 ||Result|N. Runs|Min|Mean|Max|Peak Mem.
