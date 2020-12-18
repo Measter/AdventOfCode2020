@@ -73,6 +73,7 @@ impl GameField {
             .map(|((rx, ry), rz)| (x + rx, y + ry, z + rz))
             .filter(|&(rx, ry, rz)| !(rx == x && ry == y && rz == z))
             .flat_map(|(x, y, z)| self.state.get(&(x, y, z, 0)))
+            .take(4)
             .count()
     }
 
@@ -132,6 +133,7 @@ impl GameField {
             .map(|(((rx, ry), rz), rw)| (x + rx, y + ry, z + rz, w + rw))
             .filter(|&(rx, ry, rz, rw)| !(rx == x && ry == y && rz == z && rw == w))
             .flat_map(|(x, y, z, w)| self.state.get(&(x, y, z, w)))
+            .take(4)
             .count()
     }
 
