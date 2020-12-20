@@ -20,6 +20,13 @@ use std::{collections::HashMap, num::ParseIntError};
 static ALLOC: TracingAlloc = TracingAlloc::new();
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+enum SuccessType<'a> {
+    Finish,
+    Remainder(&'a str),
+    Branch(Vec<&'a str>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum RuleValidation {
     Const(char),
     Seq(Vec<usize>),
@@ -67,51 +74,134 @@ impl RuleValidation {
         rules: &HashMap<usize, RuleValidation>,
         input: &'a str,
         depth: usize,
-    ) -> Result<&'a str, (&'a str, Report)> {
-        let mut local_input = input;
+    ) -> Result<SuccessType<'a>, (&'a str, Report)> {
+        let (id, rem_seq) = match sequence.split_first() {
+            None if input.is_empty() => {
+                // eprintln!("Seq Finished - Depth: {}", depth);
+                return Ok(SuccessType::Finish);
+            }
+            None => {
+                // eprintln!("Seq Finished - Depth: {} - Rem: {}", depth, input);
+                return Ok(SuccessType::Remainder(input));
+            }
+            Some(val) => val,
+        };
 
-        for (i, id) in sequence.iter().enumerate() {
-            eprintln!("Testing Seq rule: {}", id);
-            let rule = rules
-                .get(id)
-                .ok_or_else(|| (input, eyre!("Id not found in ruleset: {}", id)))?;
+        // eprintln!(
+        //     "Depth: {} - Testing Seq rule: {} - Testing: {}",
+        //     depth, id, input
+        // );
+        let rule = rules
+            .get(id)
+            .ok_or_else(|| (input, eyre!("Id not found in ruleset: {}", id)))?;
 
-            // Need special handling here, so we can backtrack and try the right side if the left fails.
-            local_input = match rule {
-                RuleValidation::Either { left, right } => {
-                    let rem_seq = &sequence[i + 1..];
+        // Need special handling here, so we can backtrack and try the right side if the left fails.
+        match rule {
+            RuleValidation::Either { left, right } => {
+                let calc_side = |side: &[usize]| {
+                    RuleValidation::test_seq(side, rules, input, depth + 1).and_then(
+                        |rem| -> Result<SuccessType, (&str, Report)> {
+                            // eprintln!("Continuing sequence: {:?} from 1: {:?}", sequence, rem_seq);
+                            match rem {
+                                SuccessType::Finish if rem_seq.is_empty() => {
+                                    Ok(SuccessType::Finish)
+                                }
+                                SuccessType::Finish => Err((input, eyre!("Incomplete sequence"))),
+                                SuccessType::Remainder(rem) => {
+                                    RuleValidation::test_seq(rem_seq, rules, rem, depth)
+                                }
+                                SuccessType::Branch(branches) => {
+                                    let mut success_branches = Vec::new();
+                                    let mut last_err = None;
 
-                    eprintln!("(Seq) Either rule: {:?} | {:?}", left, right);
-                    eprintln!("Left");
+                                    for branch in branches {
+                                        match RuleValidation::test_seq(
+                                            rem_seq, rules, branch, depth,
+                                        ) {
+                                            Ok(SuccessType::Finish) => {
+                                                return Ok(SuccessType::Finish)
+                                            }
+                                            Ok(SuccessType::Remainder(rem)) => {
+                                                success_branches.push(rem)
+                                            }
+                                            Ok(SuccessType::Branch(seq)) => {
+                                                success_branches.extend(seq)
+                                            }
+                                            Err(e) => last_err = Some(e),
+                                        }
+                                    }
 
-                    let left_res = RuleValidation::test_seq(left, rules, local_input, depth + 1)
-                        .and_then(|rem| {
-                            eprintln!("Continuing sequence: {:?} from {:?}", sequence, rem_seq);
-                            RuleValidation::test_seq(rem_seq, rules, rem, depth + 1)
-                        });
+                                    match (success_branches.as_slice(), last_err) {
+                                        ([], Some(e)) => Err(e),
+                                        ([], None) => panic!("Should have an error here"),
+                                        ([rem], _) => Ok(SuccessType::Remainder(*rem)),
+                                        (_, _) => Ok(SuccessType::Branch(success_branches)),
+                                    }
+                                }
+                            }
+                        },
+                    )
+                };
 
-                    match left_res {
-                        Ok(rem) => {
-                            return Ok(rem);
+                // eprintln!("(Seq) Either rule: {:?} | {:?}", left, right);
+                // eprintln!("Left - Depth: {} - Seq {:?}", depth, left);
+                let left_res = calc_side(left);
+                // eprintln!("Right - Depth: {} - Seq {:?}", depth, right);
+                let right_res = calc_side(right);
+
+                match (left_res, right_res) {
+                    (Ok(SuccessType::Finish), _) | (_, Ok(SuccessType::Finish)) => {
+                        Ok(SuccessType::Finish)
+                    }
+                    (Ok(SuccessType::Remainder(l_rem)), Ok(SuccessType::Remainder(r_rem))) => {
+                        Ok(SuccessType::Branch(vec![l_rem, r_rem]))
+                    }
+                    (Ok(SuccessType::Branch(mut l_branch)), Ok(SuccessType::Branch(r_branch))) => {
+                        l_branch.extend(r_branch);
+                        Ok(SuccessType::Branch(l_branch))
+                    }
+                    (Ok(SuccessType::Remainder(rem)), Ok(SuccessType::Branch(mut branch)))
+                    | (Ok(SuccessType::Branch(mut branch)), Ok(SuccessType::Remainder(rem))) => {
+                        branch.push(rem);
+                        Ok(SuccessType::Branch(branch))
+                    }
+                    (Err(_), Err(e)) => Err(e),
+                    (Ok(succ), Err(_)) | (Err(_), Ok(succ)) => Ok(succ),
+                }
+            }
+            _ => rule.test_rule(rules, input, depth + 1).and_then(
+                |rem| -> Result<SuccessType, (&str, Report)> {
+                    // eprintln!("Continuing sequences: {:?} from 1: {:?}", sequence, rem_seq);
+                    match rem {
+                        SuccessType::Finish if rem_seq.is_empty() => Ok(SuccessType::Finish),
+                        SuccessType::Finish => Err((input, eyre!("Incomplete sequence"))),
+                        SuccessType::Remainder(rem) => {
+                            RuleValidation::test_seq(rem_seq, rules, rem, depth)
                         }
-                        Err(_) => {
-                            eprintln!("Right");
-                            return RuleValidation::test_seq(right, rules, local_input, depth + 1)
-                                .and_then(|rem| {
-                                    eprintln!(
-                                        "Continuing sequence: {:?} from {:?}",
-                                        sequence, rem_seq
-                                    );
-                                    RuleValidation::test_seq(rem_seq, rules, rem, depth + 1)
-                                });
+                        SuccessType::Branch(branches) => {
+                            let mut success_branches = Vec::new();
+                            let mut last_err = None;
+
+                            for branch in branches {
+                                match RuleValidation::test_seq(rem_seq, rules, branch, depth) {
+                                    Ok(SuccessType::Finish) => return Ok(SuccessType::Finish),
+                                    Ok(SuccessType::Remainder(rem)) => success_branches.push(rem),
+                                    Ok(SuccessType::Branch(seq)) => success_branches.extend(seq),
+                                    Err(e) => last_err = Some(e),
+                                }
+                            }
+
+                            match (success_branches.as_slice(), last_err) {
+                                ([], Some(e)) => Err(e),
+                                ([], None) => panic!("Should have an error here"),
+                                ([rem], _) => Ok(SuccessType::Remainder(*rem)),
+                                (_, _) => Ok(SuccessType::Branch(success_branches)),
+                            }
                         }
                     }
-                }
-                _ => rule.test_rule(rules, local_input, depth)?,
-            };
+                },
+            ),
         }
-
-        Ok(local_input)
     }
 
     fn test_rule<'a>(
@@ -119,16 +209,21 @@ impl RuleValidation {
         rules: &HashMap<usize, RuleValidation>,
         input: &'a str,
         depth: usize,
-    ) -> Result<&'a str, (&'a str, Report)> {
-        eprint!("Depth: {} - Testing: {} - ", depth, input);
+    ) -> Result<SuccessType<'a>, (&'a str, Report)> {
+        // eprint!("Depth: {} - Testing: {} - ", depth, input);
         match self {
             RuleValidation::Const(c) => {
-                eprint!("Const rule: {} - ", c);
+                // eprint!("Const rule: {} - ", c);
                 if input.starts_with(*c) {
-                    eprintln!("OK");
-                    Ok(&input[c.len_utf8()..])
+                    // eprintln!("OK");
+                    let rem = &input[c.len_utf8()..];
+                    if rem.is_empty() {
+                        Ok(SuccessType::Finish)
+                    } else {
+                        Ok(SuccessType::Remainder(rem))
+                    }
                 } else {
-                    eprintln!("Err");
+                    // eprintln!("Err");
                     Err((
                         input,
                         eyre!("Pattern `{}` not found in input: {}", c, input),
@@ -136,16 +231,33 @@ impl RuleValidation {
                 }
             }
             RuleValidation::Seq(seq) => {
-                eprintln!("Seq rule: {:?}", seq);
+                // eprintln!("Seq rule: {:?}", seq);
                 RuleValidation::test_seq(seq, rules, input, depth + 1)
             }
             RuleValidation::Either { left, right } => {
-                eprintln!("Either rule: {:?} | {:?}", left, right);
-                eprintln!("Left");
-                RuleValidation::test_seq(left, rules, input, depth + 1).or_else(|_| {
-                    eprintln!("Right");
-                    RuleValidation::test_seq(right, rules, input, depth + 1)
-                })
+                // eprintln!("Either rule: {:?} | {:?}", left, right);
+                let left_res = RuleValidation::test_seq(left, rules, input, depth + 1);
+                let right_res = RuleValidation::test_seq(right, rules, input, depth + 1);
+
+                match (left_res, right_res) {
+                    (Ok(SuccessType::Finish), _) | (_, Ok(SuccessType::Finish)) => {
+                        Ok(SuccessType::Finish)
+                    }
+                    (Ok(SuccessType::Remainder(l_rem)), Ok(SuccessType::Remainder(r_rem))) => {
+                        Ok(SuccessType::Branch(vec![l_rem, r_rem]))
+                    }
+                    (Ok(SuccessType::Branch(mut l_branch)), Ok(SuccessType::Branch(r_branch))) => {
+                        l_branch.extend(r_branch);
+                        Ok(SuccessType::Branch(l_branch))
+                    }
+                    (Ok(SuccessType::Remainder(rem)), Ok(SuccessType::Branch(mut branch)))
+                    | (Ok(SuccessType::Branch(mut branch)), Ok(SuccessType::Remainder(rem))) => {
+                        branch.push(rem);
+                        Ok(SuccessType::Branch(branch))
+                    }
+                    (Err(_), Err(e)) => Err(e),
+                    (Ok(succ), Err(_)) | (Err(_), Ok(succ)) => Ok(succ),
+                }
             }
         }
     }
@@ -174,18 +286,18 @@ fn get_valid_count(rules: &HashMap<usize, RuleValidation>, data: &[&str]) -> Res
     let count = data
         .iter()
         .filter(|l| {
-            eprintln!("\n---");
+            // eprintln!("\n---");
             match first_rule.test_rule(rules, l, 0) {
-                Ok("") => {
-                    eprintln!("OK");
+                Ok(SuccessType::Finish) => {
+                    // eprintln!("OK");
                     true
                 }
-                Ok(rem) => {
-                    eprintln!("OK, with remainder: `{}`", rem);
+                Ok(_) => {
+                    // eprintln!("OK, with remainder(s): `{:?}`", rem);
                     false
                 }
                 Err(_) => {
-                    eprintln!("Failure");
+                    // eprintln!("Failure");
                     false
                 }
             }
@@ -218,7 +330,24 @@ fn main() -> Result<()> {
         "Day 19: Monster Messages",
         (&rules, &*data),
         &|(rules, data)| get_valid_count(rules, data),
-        &|_| Ok("Not Implemented"),
+        &|(rules, data)| {
+            let mut rules = rules.clone();
+            rules.insert(
+                8,
+                RuleValidation::Either {
+                    left: vec![42],
+                    right: vec![42, 8],
+                },
+            );
+            rules.insert(
+                11,
+                RuleValidation::Either {
+                    left: vec![42, 31],
+                    right: vec![42, 11, 31],
+                },
+            );
+            get_valid_count(&rules, data)
+        },
     )
 }
 
@@ -277,16 +406,16 @@ mod tests_2019 {
         };
 
         let res = rules[&0].test_rule(&rules, "a", 0).unwrap();
-        assert_eq!(res, "");
+        assert_eq!(res, SuccessType::Finish);
 
         let res = rules[&2].test_rule(&rules, "ab", 0).unwrap();
-        assert_eq!(res, "");
+        assert_eq!(res, SuccessType::Finish);
 
         let res = rules[&3].test_rule(&rules, "abb", 0).unwrap();
-        assert_eq!(res, "");
+        assert_eq!(res, SuccessType::Finish);
 
         let res = rules[&3].test_rule(&rules, "bab", 0).unwrap();
-        assert_eq!(res, "");
+        assert_eq!(res, SuccessType::Finish);
     }
 
     #[test]
@@ -311,7 +440,7 @@ mod tests_2019 {
         assert_eq!(expected, actual);
     }
 
-    // #[test]
+    #[test]
     fn part2_example2() {
         let input = aoc_lib::input(2020, 19).example(2, 1).open().unwrap();
         let (mut rules, data) = parse_input(&input).unwrap();
@@ -359,10 +488,10 @@ mod tests_2019 {
 
         print_rules(&rules);
 
-        let test = "bbbbbbbaaaabbbbaaabbabaaa";
+        let test = "babbbbaabbbbbabbbbbbaabaaabaaa";
         let rem = rules[&0].test_rule(&rules, test, 0).unwrap();
 
-        assert_eq!("", rem);
+        assert_eq!(rem, SuccessType::Finish);
     }
 
     #[test]
