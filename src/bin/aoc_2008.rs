@@ -127,23 +127,24 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 8).open()?;
-    let instrs: Vec<_> = Instruction::parse(&input)?;
+    let (instrs, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| Instruction::parse(&input))?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+        let mut computer = Computer::default();
+        let mut seen_pc = HashSet::new();
+        part1(&instrs, &mut computer, &mut seen_pc)
+    })?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&instrs))?;
 
-    aoc_lib::run(
-        &ALLOC,
+    aoc_lib::display_results(
         "Day 8: Handheld Halting",
-        &*instrs,
-        &|i| {
-            let mut computer = Computer::default();
-            let mut seen_pc = HashSet::new();
-            part1(i, &mut computer, &mut seen_pc)
-        },
-        &part2,
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2008 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
@@ -151,7 +152,10 @@ mod tests_2008 {
         use Instruction::*;
         let expected = vec![Acc(-1), Acc(1), Jmp(-1), Jmp(1), Nop(-1), Nop(1)];
 
-        let input = aoc_lib::input(2020, 8).example(0, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 8)
+            .example(Example::Parse, 1)
+            .open()
+            .unwrap();
         let actual = Instruction::parse(&input).unwrap();
 
         assert_eq!(expected, actual);
@@ -159,7 +163,10 @@ mod tests_2008 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 8).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 8)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let instrs = Instruction::parse(&input).unwrap();
 
         let mut computer = Computer::default();
@@ -173,7 +180,10 @@ mod tests_2008 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 8).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 8)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let instrs = Instruction::parse(&input).unwrap();
 
         let expected = 8;

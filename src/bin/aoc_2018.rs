@@ -135,31 +135,49 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 18).open()?;
+    let (p1_input, p1_parse_bench) = aoc_lib::bench(&ALLOC, "Parse (1)", &|| {
+        input
+            .lines()
+            .map(|l| Operator::parse(l, &part1_precedence))
+            .collect::<Result<Vec<_>>>()
+    })?;
+    let (p2_input, p2_parse_bench) = aoc_lib::bench(&ALLOC, "Parse (2)", &|| {
+        input
+            .lines()
+            .map(|l| Operator::parse(l, &part2_precedence))
+            .collect::<Result<Vec<_>>>()
+    })?;
 
-    aoc_lib::run(
-        &ALLOC,
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+        let res = p1_input
+            .iter()
+            .map(|e| Operator::evaluate(&e))
+            .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
+        Ok(res)
+    })?;
+
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+        let res = p2_input
+            .iter()
+            .map(|e| Operator::evaluate(&e))
+            .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
+        Ok(res)
+    })?;
+
+    aoc_lib::display_results(
         "Day 18: Operation Order",
-        &*input,
-        &|input| {
-            let res = input
-                .lines()
-                .map(|l| Operator::parse(l, &part1_precedence).and_then(|e| Operator::evaluate(&e)))
-                .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
-            Ok(res)
-        },
-        &|input| {
-            let res = input
-                .lines()
-                .map(|l| Operator::parse(l, &part2_precedence).and_then(|e| Operator::evaluate(&e)))
-                .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
-            Ok(res)
-        },
+        &[
+            (&"", p1_parse_bench),
+            (&"", p2_parse_bench),
+            (&p1_res, p1_bench),
+            (&p2_res, p2_bench),
+        ],
     )
 }
 
 #[cfg(test)]
 mod tests_2018 {
-    use aoc_lib::parsers::split_pair;
+    use aoc_lib::{parsers::split_pair, Example};
 
     use super::*;
 
@@ -199,7 +217,10 @@ mod tests_2018 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 18).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 18)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         for line in input.lines() {
             let (expr, res) = split_pair(line, ";").unwrap();
@@ -247,7 +268,10 @@ mod tests_2018 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 18).example(2, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 18)
+            .example(Example::Part2, 1)
+            .open()
+            .unwrap();
 
         for line in input.lines() {
             let (expr, res) = split_pair(line, ";").unwrap();

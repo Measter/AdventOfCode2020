@@ -323,37 +323,37 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 19).open()?;
-    let (rules, data) = parse_input(&input)?;
+    let ((rules, data), parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| parse_input(&input))?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| get_valid_count(&rules, &data))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+        let mut rules = rules.clone();
+        rules.insert(
+            8,
+            RuleValidation::Either {
+                left: vec![42],
+                right: vec![42, 8],
+            },
+        );
+        rules.insert(
+            11,
+            RuleValidation::Either {
+                left: vec![42, 31],
+                right: vec![42, 11, 31],
+            },
+        );
+        get_valid_count(&rules, &data)
+    })?;
 
-    aoc_lib::run(
-        &ALLOC,
+    aoc_lib::display_results(
         "Day 19: Monster Messages",
-        (&rules, &*data),
-        &|(rules, data)| get_valid_count(rules, data),
-        &|(rules, data)| {
-            let mut rules = rules.clone();
-            rules.insert(
-                8,
-                RuleValidation::Either {
-                    left: vec![42],
-                    right: vec![42, 8],
-                },
-            );
-            rules.insert(
-                11,
-                RuleValidation::Either {
-                    left: vec![42, 31],
-                    right: vec![42, 11, 31],
-                },
-            );
-            get_valid_count(&rules, data)
-        },
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2019 {
     use super::*;
+    use aoc_lib::Example;
     use maplit::hashmap;
 
     #[test]
@@ -379,7 +379,10 @@ mod tests_2019 {
 
     #[test]
     fn parse_test() {
-        let input = aoc_lib::input(2020, 19).example(0, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 19)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let expected_rules = hashmap! {
             0 => RuleValidation::Seq(vec![4, 1, 5]),
             1 => RuleValidation::Either{left: vec![2, 3], right: vec![3, 2]},
@@ -420,7 +423,10 @@ mod tests_2019 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 19).example(0, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 19)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let (rules, data) = parse_input(&input).unwrap();
 
         let expected = 2;
@@ -431,7 +437,10 @@ mod tests_2019 {
 
     #[test]
     fn part2_example1() {
-        let input = aoc_lib::input(2020, 19).example(2, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 19)
+            .example(Example::Part2, 1)
+            .open()
+            .unwrap();
         let (rules, data) = parse_input(&input).unwrap();
 
         let expected = 3;
@@ -442,7 +451,10 @@ mod tests_2019 {
 
     #[test]
     fn part2_example2() {
-        let input = aoc_lib::input(2020, 19).example(2, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 19)
+            .example(Example::Part2, 1)
+            .open()
+            .unwrap();
         let (mut rules, data) = parse_input(&input).unwrap();
 
         rules.insert(
@@ -468,7 +480,10 @@ mod tests_2019 {
 
     #[test]
     fn part2_example3() {
-        let input = aoc_lib::input(2020, 19).example(2, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 19)
+            .example(Example::Part2, 1)
+            .open()
+            .unwrap();
         let (mut rules, _) = parse_input(&input).unwrap();
 
         rules.insert(
@@ -496,7 +511,10 @@ mod tests_2019 {
 
     #[test]
     fn part2_example4() {
-        let input = aoc_lib::input(2020, 19).example(2, 2).open().unwrap();
+        let input = aoc_lib::input(2020, 19)
+            .example(Example::Part2, 2)
+            .open()
+            .unwrap();
         let (rules, data) = parse_input(&input).unwrap();
 
         let expected = 1;

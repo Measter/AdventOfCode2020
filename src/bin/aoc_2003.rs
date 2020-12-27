@@ -74,24 +74,28 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 3).open()?;
-    let map = Map::parse(&input)?;
+    let (map, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| Map::parse(&input))?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| map.count_trees(3, 1))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&map))?;
 
-    aoc_lib::run(
-        &ALLOC,
+    aoc_lib::display_results(
         "Day 3: Toboggan Trajectory",
-        &map,
-        &|map| map.count_trees(3, 1),
-        &part2,
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2003 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 3).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 3)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let map = Map::parse(&input).unwrap();
 
         assert_eq!(7, map.count_trees(3, 1).unwrap());
@@ -99,7 +103,10 @@ mod tests_2003 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 3).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 3)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let slopes = [
             ((1, 1), 2),

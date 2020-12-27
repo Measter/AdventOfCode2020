@@ -50,30 +50,38 @@ fn main() -> Result<()> {
 
     let input = aoc_lib::input(2020, 10).open()?;
 
-    let mut adaptors: Vec<u64> = input
-        .lines()
-        .map(str::trim)
-        .map(str::parse)
-        .collect::<Result<_, ParseIntError>>()?;
+    let (mut adaptors, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
+        let res: Vec<_> = input
+            .lines()
+            .map(str::trim)
+            .map(str::parse)
+            .collect::<Result<_, ParseIntError>>()?;
+        Ok(res)
+    })?;
 
     adaptors.sort();
 
-    aoc_lib::run(
-        &ALLOC,
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&adaptors))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&adaptors))?;
+
+    aoc_lib::display_results(
         "Day 10: Adapter Array",
-        &*adaptors,
-        &|adaptors| part1(adaptors),
-        &|adaptors| part2(adaptors),
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2010 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn part1_example1() {
-        let input = aoc_lib::input(2020, 10).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 10)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let mut adaptors: Vec<u64> = input
             .lines()
@@ -92,7 +100,10 @@ mod tests_2010 {
 
     #[test]
     fn part1_example2() {
-        let input = aoc_lib::input(2020, 10).example(1, 2).open().unwrap();
+        let input = aoc_lib::input(2020, 10)
+            .example(Example::Part1, 2)
+            .open()
+            .unwrap();
 
         let mut adaptors: Vec<u64> = input
             .lines()
@@ -111,7 +122,10 @@ mod tests_2010 {
 
     #[test]
     fn part2_example1() {
-        let input = aoc_lib::input(2020, 10).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 10)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let mut adaptors: Vec<u64> = input
             .lines()
@@ -130,7 +144,10 @@ mod tests_2010 {
 
     #[test]
     fn part2_example2() {
-        let input = aoc_lib::input(2020, 10).example(1, 2).open().unwrap();
+        let input = aoc_lib::input(2020, 10)
+            .example(Example::Part1, 2)
+            .open()
+            .unwrap();
 
         let mut adaptors: Vec<u64> = input
             .lines()

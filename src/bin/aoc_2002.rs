@@ -71,28 +71,36 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 2).open()?;
-    let inputs: Vec<_> = input
-        .lines()
-        .map(str::trim)
-        .map(Password::parse)
-        .collect::<Result<_>>()?;
+    let (inputs, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
+        let res: Vec<_> = input
+            .lines()
+            .map(str::trim)
+            .map(Password::parse)
+            .collect::<Result<_>>()?;
+        Ok(res)
+    })?;
 
-    aoc_lib::run(
-        &ALLOC,
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&inputs))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&inputs))?;
+
+    aoc_lib::display_results(
         "Day 2: Password Philosophy",
-        inputs.as_slice(),
-        &part1,
-        &part2,
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2002 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn parse_test() {
-        let input = aoc_lib::input(2020, 2).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 2)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let expected = vec![
             Password {

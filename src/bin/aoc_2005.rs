@@ -68,8 +68,13 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 5).open()?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&input))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&input))?;
 
-    aoc_lib::run(&ALLOC, "Day 5: Binary Boarding", &*input, &part1, &part2)
+    aoc_lib::display_results(
+        "Day 5: Binary Boarding",
+        &[(&p1_res, p1_bench), (&p2_res, p2_bench)],
+    )
 }
 
 #[cfg(test)]

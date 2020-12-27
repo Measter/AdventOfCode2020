@@ -110,24 +110,33 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 4).open()?;
-    let passports = Passport::parse_passports(&input)?;
+    let (passports, parse_bench) =
+        aoc_lib::bench(&ALLOC, "Parse", &|| Passport::parse_passports(&input))?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+        Ok(passports.iter().filter(|p| p.is_valid_part1()).count())
+    })?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+        Ok(passports.iter().filter(|p| p.is_valid_part2()).count())
+    })?;
 
-    aoc_lib::run(
-        &ALLOC,
+    aoc_lib::display_results(
         "Day 4: Passport Processing",
-        &passports,
-        &|passports| Ok(passports.iter().filter(|p| p.is_valid_part1()).count()),
-        &|passports| Ok(passports.iter().filter(|p| p.is_valid_part2()).count()),
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2004 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn parse_test() {
-        let input = aoc_lib::input(2020, 4).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 4)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let expected = [
             Passport {
@@ -178,7 +187,10 @@ mod tests_2004 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 4).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 4)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let passports = Passport::parse_passports(&input).unwrap();
 

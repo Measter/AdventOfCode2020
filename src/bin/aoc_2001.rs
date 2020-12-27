@@ -36,18 +36,21 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 1).open()?;
-    let inputs: Vec<_> = input
-        .lines()
-        .map(str::trim)
-        .map(str::parse)
-        .collect::<Result<_, ParseIntError>>()?;
+    let (inputs, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
+        let res: Vec<_> = input
+            .lines()
+            .map(str::trim)
+            .map(str::parse)
+            .collect::<Result<_, ParseIntError>>()?;
+        Ok(res)
+    })?;
 
-    aoc_lib::run(
-        &ALLOC,
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&inputs, 2020))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&inputs, 2020))?;
+
+    aoc_lib::display_results(
         "Day 1: Report Repair",
-        inputs.as_slice(),
-        &|i| part1(i, 2020),
-        &|i| part2(i, 2020),
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
@@ -55,11 +58,16 @@ fn main() -> Result<()> {
 mod tests_2001 {
     use std::num::ParseIntError;
 
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 1).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 1)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let inputs: Vec<_> = input
             .lines()
@@ -73,7 +81,10 @@ mod tests_2001 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 1).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 1)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let inputs: Vec<_> = input
             .lines()

@@ -194,38 +194,42 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 17).open()?;
-    let state = GameField::parse(&input).unwrap();
+    let (state, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| GameField::parse(&input))?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+        let mut state = state.clone();
+        for _ in 0..6 {
+            state.step_3d();
+        }
 
-    aoc_lib::run(
-        &ALLOC,
+        Ok(state.count_active())
+    })?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+        let mut state = state.clone();
+        for _ in 0..6 {
+            state.step_4d();
+        }
+
+        Ok(state.count_active())
+    })?;
+
+    aoc_lib::display_results(
         "Day 17: Conway Cubes",
-        &state,
-        &|state| {
-            let mut state = state.clone();
-            for _ in 0..6 {
-                state.step_3d();
-            }
-
-            Ok(state.count_active())
-        },
-        &|state| {
-            let mut state = state.clone();
-            for _ in 0..6 {
-                state.step_4d();
-            }
-
-            Ok(state.count_active())
-        },
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2017 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 17).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 17)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let mut state = GameField::parse(&input).unwrap();
 
         for _ in 0..6 {
@@ -240,7 +244,10 @@ mod tests_2017 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 17).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 17)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let mut state = GameField::parse(&input).unwrap();
 
         for _ in 0..6 {

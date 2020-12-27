@@ -76,25 +76,28 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 7).open()?;
-    let rules = parse_bags(&input)?;
+    let (rules, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| parse_bags(&input))?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&rules, "shiny gold"))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&rules, "shiny gold"))?;
 
-    aoc_lib::run(
-        &ALLOC,
+    aoc_lib::display_results(
         "Day 7: Handy Haversacks",
-        &rules,
-        &|bag_rules| part1(bag_rules, "shiny gold"),
-        &|bag_rules| part2(bag_rules, "shiny gold"),
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2007 {
     use super::*;
+    use aoc_lib::Example;
     use maplit::hashmap;
 
     #[test]
     fn parse_test() {
-        let input = aoc_lib::input(2020, 7).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 7)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let expected = hashmap! {
             "light red" => hashmap!{
@@ -135,7 +138,10 @@ mod tests_2007 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 7).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 7)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let bags = parse_bags(&input).unwrap();
 
         let expected = 4;
@@ -146,7 +152,10 @@ mod tests_2007 {
 
     #[test]
     fn part2_example1() {
-        let input = aoc_lib::input(2020, 7).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 7)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let bags = parse_bags(&input).unwrap();
 
         let expected = 32;
@@ -157,7 +166,10 @@ mod tests_2007 {
 
     #[test]
     fn part2_example2() {
-        let input = aoc_lib::input(2020, 7).example(2, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 7)
+            .example(Example::Part2, 1)
+            .open()
+            .unwrap();
         let bags = parse_bags(&input).unwrap();
 
         let expected = 126;

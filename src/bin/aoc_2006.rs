@@ -54,17 +54,27 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 6).open()?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&input))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&input))?;
 
-    aoc_lib::run(&ALLOC, "Day 6: Custom Customs", &*input, &part1, &part2)
+    aoc_lib::display_results(
+        "Day 6: Custom Customs",
+        &[(&p1_res, p1_bench), (&p2_res, p2_bench)],
+    )
 }
 
 #[cfg(test)]
 mod tests_2006 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 6).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 6)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let expected = 11;
         let actual = part1(&input).unwrap();
@@ -74,7 +84,10 @@ mod tests_2006 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 6).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 6)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let expected = 6;
         let actual = part2(&input).unwrap();

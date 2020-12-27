@@ -145,24 +145,37 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 22).open()?;
-    let decks = parse_input(&input)?;
+    let ((p1_deck, p2_deck), parse_bench) =
+        aoc_lib::bench(&ALLOC, "Parse", &|| parse_input(&input))?;
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+        play_part1(p1_deck.clone(), p2_deck.clone())
+    })?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+        play_part2(p1_deck.clone(), p2_deck.clone())
+    })?;
 
-    aoc_lib::run(
-        &ALLOC,
+    aoc_lib::display_results(
         "Day 22: Crab Combat",
-        &decks,
-        &|(p1_deck, p2_deck)| play_part1(p1_deck.clone(), p2_deck.clone()),
-        &|(p1_deck, p2_deck)| play_part2(p1_deck.clone(), p2_deck.clone()).map(|(_, score)| score),
+        &[
+            (&"", parse_bench),
+            (&p1_res, p1_bench),
+            (&p2_res.1, p2_bench),
+        ],
     )
 }
 
 #[cfg(test)]
-mod tests_20122 {
+mod tests_2022 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 22).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 22)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
         let (player1, player2) = parse_input(&input).unwrap();
 
         let expected = 306;
@@ -173,7 +186,10 @@ mod tests_20122 {
 
     #[test]
     fn part2_example_infinite_loop_test() {
-        let input = aoc_lib::input(2020, 22).example(2, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 22)
+            .example(Example::Part2, 1)
+            .open()
+            .unwrap();
         let (player1, player2) = parse_input(&input).unwrap();
 
         // Just checks that we don't go into an infinite loop.
@@ -182,10 +198,13 @@ mod tests_20122 {
 
     #[test]
     fn part2_example2() {
-        let input = aoc_lib::input(2020, 22).example(2, 2).open().unwrap();
+        let input = aoc_lib::input(2020, 22)
+            .example(Example::Part2, 2)
+            .open()
+            .unwrap();
         let (player1, player2) = parse_input(&input).unwrap();
 
-        let expected = (Winner::Player2, 292);
+        let expected = (Winner::Player2, 291);
         let actual = play_part2(player1, player2).unwrap();
 
         assert_eq!(expected, actual);

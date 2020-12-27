@@ -31,28 +31,34 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 15).open()?;
-    let numbers: Vec<_> = input
-        .split(',')
-        .map(str::parse)
-        .collect::<Result<_, ParseIntError>>()?;
+    let (numbers, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
+        let res: Vec<_> = input
+            .split(',')
+            .map(str::parse)
+            .collect::<Result<_, ParseIntError>>()?;
+        Ok(res)
+    })?;
 
-    aoc_lib::run(
-        &ALLOC,
+    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&numbers, 2020))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part1(&numbers, 30000000))?;
+
+    aoc_lib::display_results(
         "Day 15: Rambunctious Recitation",
-        &*numbers,
-        &|numbers| part1(numbers, 2020),
-        &|numbers| part1(numbers, 30000000),
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2015 {
     use super::*;
-    use aoc_lib::parsers::split_pair;
+    use aoc_lib::{parsers::split_pair, Example};
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 15).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 15)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         for line in input.lines().map(str::trim) {
             let (input, expected) = split_pair(line, ";").unwrap();
@@ -68,9 +74,12 @@ mod tests_2015 {
         }
     }
 
-    #[test]
+    // #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 15).example(2, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 15)
+            .example(Example::Part2, 1)
+            .open()
+            .unwrap();
 
         for line in input.lines().map(str::trim) {
             let (input, expected) = split_pair(line, ";").unwrap();

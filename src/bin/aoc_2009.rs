@@ -48,28 +48,36 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 9).open()?;
-    let sequence: Vec<_> = input
-        .lines()
-        .map(str::trim)
-        .map(str::parse)
-        .collect::<Result<_, ParseIntError>>()?;
+    let (sequence, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
+        let res: Vec<_> = input
+            .lines()
+            .map(str::trim)
+            .map(str::parse)
+            .collect::<Result<_, ParseIntError>>()?;
+        Ok(res)
+    })?;
+    let (p1_res, p1_bench) =
+        aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&sequence, 25).map(|(_, r)| r))?;
+    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&sequence, 25))?;
 
-    aoc_lib::run(
-        &ALLOC,
+    aoc_lib::display_results(
         "Day 9: Encoding Error",
-        &*sequence,
-        &|input| part1(input, 25).map(|(_, r)| r),
-        &|input| part2(input, 25),
+        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
     )
 }
 
 #[cfg(test)]
 mod tests_2009 {
+    use aoc_lib::Example;
+
     use super::*;
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 9).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 9)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let parsed: Vec<_> = input
             .lines()
@@ -85,7 +93,10 @@ mod tests_2009 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 9).example(1, 1).open().unwrap();
+        let input = aoc_lib::input(2020, 9)
+            .example(Example::Part1, 1)
+            .open()
+            .unwrap();
 
         let parsed: Vec<_> = input
             .lines()
