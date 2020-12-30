@@ -31,11 +31,8 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 15).open()?;
-    let (numbers, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
-        let res: Vec<_> = input
-            .split(',')
-            .map(str::parse)
-            .collect::<Result<_, ParseIntError>>()?;
+    let (numbers, parse_bench) = aoc_lib::bench::<_, ParseIntError>(&ALLOC, "Parse", &|| {
+        let res: Vec<_> = input.split(',').map(str::parse).collect::<Result<_, _>>()?;
         Ok(res)
     })?;
 
@@ -45,7 +42,9 @@ fn main() -> Result<()> {
     aoc_lib::display_results(
         "Day 15: Rambunctious Recitation",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

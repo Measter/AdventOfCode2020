@@ -161,7 +161,9 @@ fn main() -> Result<()> {
             (&p1_res, p1_bench),
             (&p2_res.1, p2_bench),
         ],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

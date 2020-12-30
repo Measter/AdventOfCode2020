@@ -50,12 +50,12 @@ fn main() -> Result<()> {
 
     let input = aoc_lib::input(2020, 10).open()?;
 
-    let (mut adaptors, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
+    let (mut adaptors, parse_bench) = aoc_lib::bench::<_, ParseIntError>(&ALLOC, "Parse", &|| {
         let res: Vec<_> = input
             .lines()
             .map(str::trim)
             .map(str::parse)
-            .collect::<Result<_, ParseIntError>>()?;
+            .collect::<Result<_, _>>()?;
         Ok(res)
     })?;
 
@@ -67,7 +67,9 @@ fn main() -> Result<()> {
     aoc_lib::display_results(
         "Day 10: Adapter Array",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

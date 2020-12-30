@@ -83,7 +83,9 @@ fn main() -> Result<()> {
     aoc_lib::display_results(
         "Day 7: Handy Haversacks",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

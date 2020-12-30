@@ -112,17 +112,19 @@ fn main() -> Result<()> {
     let input = aoc_lib::input(2020, 4).open()?;
     let (passports, parse_bench) =
         aoc_lib::bench(&ALLOC, "Parse", &|| Passport::parse_passports(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+    let (p1_res, p1_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 1", &|| {
         Ok(passports.iter().filter(|p| p.is_valid_part1()).count())
     })?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+    let (p2_res, p2_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 2", &|| {
         Ok(passports.iter().filter(|p| p.is_valid_part2()).count())
     })?;
 
     aoc_lib::display_results(
         "Day 4: Passport Processing",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

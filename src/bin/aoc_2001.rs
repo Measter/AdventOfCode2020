@@ -36,12 +36,12 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 1).open()?;
-    let (inputs, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
+    let (inputs, parse_bench) = aoc_lib::bench::<_, ParseIntError>(&ALLOC, "Parse", &|| {
         let res: Vec<_> = input
             .lines()
             .map(str::trim)
             .map(str::parse)
-            .collect::<Result<_, ParseIntError>>()?;
+            .collect::<Result<_, _>>()?;
         Ok(res)
     })?;
 
@@ -51,7 +51,9 @@ fn main() -> Result<()> {
     aoc_lib::display_results(
         "Day 1: Report Repair",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

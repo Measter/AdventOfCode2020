@@ -195,7 +195,7 @@ fn main() -> Result<()> {
 
     let input = aoc_lib::input(2020, 17).open()?;
     let (state, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| GameField::parse(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+    let (p1_res, p1_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 1", &|| {
         let mut state = state.clone();
         for _ in 0..6 {
             state.step_3d();
@@ -203,7 +203,7 @@ fn main() -> Result<()> {
 
         Ok(state.count_active())
     })?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+    let (p2_res, p2_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 2", &|| {
         let mut state = state.clone();
         for _ in 0..6 {
             state.step_4d();
@@ -215,7 +215,9 @@ fn main() -> Result<()> {
     aoc_lib::display_results(
         "Day 17: Conway Cubes",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

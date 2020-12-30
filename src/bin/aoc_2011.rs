@@ -189,12 +189,12 @@ fn main() -> Result<()> {
 
     let input = aoc_lib::input(2020, 11).open()?;
     let (floor, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| WaitingArea::parse(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+    let (p1_res, p1_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 1", &|| {
         let mut floor = floor.clone();
         floor.run(&WaitingArea::count_neighbours_part1, 4);
         Ok(floor.occupied_seats())
     })?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+    let (p2_res, p2_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 2", &|| {
         let mut floor = floor.clone();
         floor.run(&WaitingArea::count_neighbours_part2, 5);
         Ok(floor.occupied_seats())
@@ -203,7 +203,9 @@ fn main() -> Result<()> {
     aoc_lib::display_results(
         "Day 11: Seating System",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

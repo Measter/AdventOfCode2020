@@ -1,5 +1,8 @@
 use aoc_lib::TracingAlloc;
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::{
+    eyre::{eyre, Result},
+    Report,
+};
 use itertools::Itertools;
 
 #[global_allocator]
@@ -135,7 +138,7 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 18).open()?;
-    let (p1_input, p1_parse_bench) = aoc_lib::bench(&ALLOC, "Parse (1)", &|| {
+    let (p1_input, p1_parse_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Parse (1)", &|| {
         input
             .lines()
             .map(|l| Operator::parse(l, &part1_precedence))
@@ -148,7 +151,7 @@ fn main() -> Result<()> {
             .collect::<Result<Vec<_>>>()
     })?;
 
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
+    let (p1_res, p1_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Part 1", &|| {
         let res = p1_input
             .iter()
             .map(|e| Operator::evaluate(&e))
@@ -156,7 +159,7 @@ fn main() -> Result<()> {
         Ok(res)
     })?;
 
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
+    let (p2_res, p2_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Part 2", &|| {
         let res = p2_input
             .iter()
             .map(|e| Operator::evaluate(&e))
@@ -172,7 +175,9 @@ fn main() -> Result<()> {
             (&p1_res, p1_bench),
             (&p2_res, p2_bench),
         ],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

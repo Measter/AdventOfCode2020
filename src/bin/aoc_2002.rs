@@ -1,7 +1,10 @@
 #![allow(clippy::unnecessary_wraps, clippy::clippy::ptr_arg)]
 
 use aoc_lib::{parsers::unsigned_number, TracingAlloc};
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::{
+    eyre::{eyre, Result},
+    Report,
+};
 use nom::{
     bytes::complete::{tag, take_till1, take_while1},
     sequence::tuple,
@@ -71,7 +74,7 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let input = aoc_lib::input(2020, 2).open()?;
-    let (inputs, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
+    let (inputs, parse_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Parse", &|| {
         let res: Vec<_> = input
             .lines()
             .map(str::trim)
@@ -86,7 +89,9 @@ fn main() -> Result<()> {
     aoc_lib::display_results(
         "Day 2: Password Philosophy",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]

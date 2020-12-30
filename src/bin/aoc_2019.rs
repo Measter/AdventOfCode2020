@@ -347,7 +347,9 @@ fn main() -> Result<()> {
     aoc_lib::display_results(
         "Day 19: Monster Messages",
         &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    )
+    );
+
+    Ok(())
 }
 
 #[cfg(test)]
