@@ -1,60 +1,55 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, hash::Hash, ops::RangeInclusive};
 
 use aoc_lib::TracingAlloc;
 use color_eyre::{eyre::Result, Report};
-use itertools::Itertools;
+use itertools::iproduct;
 
 #[global_allocator]
 static ALLOC: TracingAlloc = TracingAlloc::new();
 
-fn parse_3d(input: &str) -> Result<HashSet<[i8; 3]>> {
+fn parse<T>(input: &str) -> Result<HashSet<T>>
+where
+    T: Default + AsMut<[i8]> + Eq + Hash,
+{
     let mut state = HashSet::new();
 
     for (line, y) in input.lines().zip(0..) {
         for (_, x) in line.chars().zip(0..).filter(|(c, _)| *c == '#') {
-            state.insert([x, y, 0]);
+            let mut cell = T::default();
+            let cell_ref = cell.as_mut();
+            cell_ref[0] = x;
+            cell_ref[1] = y;
+            state.insert(cell);
         }
     }
 
     Ok(state)
 }
 
-fn get_neighbours_3d([x, y, z]: [i8; 3]) -> impl Iterator<Item = [i8; 3]> {
-    let x_range = -1..=1;
-    let y_range = -1..=1;
-    let z_range = -1..=1;
+const NEIGHBOUR_RANGE: RangeInclusive<i8> = -1..=1;
 
-    x_range
-        .cartesian_product(y_range)
-        .cartesian_product(z_range)
-        .filter(|&((x, y), z)| [x, y, z] != [0, 0, 0])
-        .map(move |((rx, ry), rz)| [x + rx, y + ry, z + rz])
+fn get_neighbours_3d(cell: [i8; 3]) -> impl Iterator<Item = [i8; 3]> {
+    iproduct!(NEIGHBOUR_RANGE, NEIGHBOUR_RANGE, NEIGHBOUR_RANGE)
+        .filter(|&coords| coords != Default::default())
+        .map(move |nc| [nc.0 + cell[0], nc.1 + cell[1], nc.2 + cell[2]])
 }
 
-fn parse_4d(input: &str) -> Result<HashSet<[i8; 4]>> {
-    let mut state = HashSet::new();
-
-    for (line, y) in input.lines().zip(0..) {
-        for (_, x) in line.chars().zip(0..).filter(|(c, _)| *c == '#') {
-            state.insert([x, y, 0, 0]);
-        }
-    }
-
-    Ok(state)
-}
-
-fn get_neighbours_4d([x, y, z, w]: [i8; 4]) -> impl Iterator<Item = [i8; 4]> {
-    let x_range = -1..=1;
-    let y_range = -1..=1;
-    let z_range = -1..=1;
-    let w_range = -1..=1;
-
-    x_range
-        .cartesian_product(y_range)
-        .cartesian_product(z_range)
-        .cartesian_product(w_range)
-        .filter(|&(((x, y), z), w)| [x, y, z, w] != [0, 0, 0, 0])
-        .map(move |(((rx, ry), rz), rw)| [x + rx, y + ry, z + rz, w + rw])
+fn get_neighbours_4d(cell: [i8; 4]) -> impl Iterator<Item = [i8; 4]> {
+    iproduct!(
+        NEIGHBOUR_RANGE,
+        NEIGHBOUR_RANGE,
+        NEIGHBOUR_RANGE,
+        NEIGHBOUR_RANGE
+    )
+    .filter(|&coords| coords != Default::default())
+    .map(move |nc| {
+        [
+            nc.0 + cell[0],
+            nc.1 + cell[1],
+            nc.2 + cell[2],
+            nc.3 + cell[3],
+        ]
+    })
 }
 
 #[derive(Debug, Clone)]
@@ -67,7 +62,7 @@ struct GameField<T, F> {
 
 impl<T, F, I> GameField<T, F>
 where
-    T: Copy + Eq + std::hash::Hash,
+    T: Copy + Eq + Hash,
     F: Fn(T) -> I,
     I: Iterator<Item = T>,
 {
@@ -122,11 +117,11 @@ fn main() -> Result<()> {
 
     let input = aoc_lib::input(2020, 17).open()?;
     let (game_3d, parse3d_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Parse 3D", &|| {
-        let state = parse_3d(&input)?;
+        let state = parse::<[i8; 3]>(&input)?;
         Ok(GameField::new(state, get_neighbours_3d))
     })?;
     let (game_4d, parse4d_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Parse 4D", &|| {
-        let state = parse_4d(&input)?;
+        let state = parse::<[i8; 4]>(&input)?;
         Ok(GameField::new(state, get_neighbours_4d))
     })?;
 
@@ -172,7 +167,7 @@ mod tests_2017 {
             .example(Example::Part1, 1)
             .open()
             .unwrap();
-        let state = parse_3d(&input).unwrap();
+        let state = parse::<[i8; 3]>(&input).unwrap();
         let mut game = GameField::new(state, get_neighbours_3d);
 
         for _ in 0..6 {
@@ -191,7 +186,7 @@ mod tests_2017 {
             .example(Example::Part1, 1)
             .open()
             .unwrap();
-        let state = parse_4d(&input).unwrap();
+        let state = parse::<[i8; 4]>(&input).unwrap();
         let mut game = GameField::new(state, get_neighbours_4d);
 
         for _ in 0..6 {
