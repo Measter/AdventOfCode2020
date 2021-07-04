@@ -1,12 +1,47 @@
-use aoc_lib::TracingAlloc;
+use aoc_lib::{day, Bench, BenchResult, UserError};
 use color_eyre::{
     eyre::{eyre, Result},
     Report,
 };
 use itertools::Itertools;
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 18: "Operation Order"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let input: Vec<_> = input
+        .lines()
+        .map(|l| Operator::parse(l, &part1_precedence))
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| {
+        input
+            .iter()
+            .map(|e| Operator::evaluate(&e))
+            .try_fold(0, |acc, res| Ok::<_, Report>(acc + res?))
+            .map_err(UserError)
+    })
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let input: Vec<_> = input
+        .lines()
+        .map(|l| Operator::parse(l, &part2_precedence))
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| {
+        input
+            .iter()
+            .map(|e| Operator::evaluate(&e))
+            .try_fold(0, |acc, res| Ok::<_, Report>(acc + res?))
+            .map_err(UserError)
+    })
+}
 
 // A weird one, but simplifies some code later.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -132,52 +167,6 @@ impl Operator {
             Ok(stack.pop().unwrap())
         }
     }
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 18).open()?;
-    let (p1_input, p1_parse_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Parse (1)", &|| {
-        input
-            .lines()
-            .map(|l| Operator::parse(l, &part1_precedence))
-            .collect::<Result<Vec<_>>>()
-    })?;
-    let (p2_input, p2_parse_bench) = aoc_lib::bench(&ALLOC, "Parse (2)", &|| {
-        input
-            .lines()
-            .map(|l| Operator::parse(l, &part2_precedence))
-            .collect::<Result<Vec<_>>>()
-    })?;
-
-    let (p1_res, p1_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Part 1", &|| {
-        let res = p1_input
-            .iter()
-            .map(|e| Operator::evaluate(&e))
-            .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
-        Ok(res)
-    })?;
-
-    let (p2_res, p2_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Part 2", &|| {
-        let res = p2_input
-            .iter()
-            .map(|e| Operator::evaluate(&e))
-            .try_fold(0, |acc, res| -> Result<u64> { Ok(acc + res?) })?;
-        Ok(res)
-    })?;
-
-    aoc_lib::display_results(
-        "Day 18: Operation Order",
-        &[
-            (&"", p1_parse_bench),
-            (&"", p2_parse_bench),
-            (&p1_res, p1_bench),
-            (&p2_res, p2_bench),
-        ],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

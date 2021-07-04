@@ -1,8 +1,33 @@
-use aoc_lib::TracingAlloc;
+use aoc_lib::{day, Bench, BenchResult, UserError};
 use color_eyre::eyre::{eyre, Result, WrapErr};
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 12: "Rain Risk"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let instructions: Vec<_> = input
+        .lines()
+        .map(str::trim)
+        .map(Instruction::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| part1(&instructions))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let instructions: Vec<_> = input
+        .lines()
+        .map(str::trim)
+        .map(Instruction::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| part2(&instructions))
+}
 
 #[derive(Debug, Copy, Clone)]
 enum Instruction {
@@ -129,28 +154,6 @@ fn part2(instructions: &[Instruction]) -> Result<i32> {
     }
 
     Ok(ship_x.abs() + ship_y.abs())
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 12).open()?;
-    let (instructions, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| {
-        input
-            .lines()
-            .map(str::trim)
-            .map(Instruction::parse)
-            .collect::<Result<Vec<_>>>()
-    })?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&instructions))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&instructions))?;
-
-    aoc_lib::display_results(
-        "Day 12: Rain Risk",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

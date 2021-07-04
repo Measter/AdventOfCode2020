@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use aoc_lib::{parsers::unsigned_number, TracingAlloc};
+use aoc_lib::{day, parsers::unsigned_number, Bench, BenchResult, UserError};
 use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::{tag, take_until},
@@ -8,8 +8,21 @@ use nom::{
     sequence::tuple,
 };
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 7: "Handy Haversacks"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let rules = parse_bags(input).map_err(UserError)?;
+    b.bench(|| part1(&rules, "shiny gold"))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let rules = parse_bags(input).map_err(UserError)?;
+    b.bench(|| part2(&rules, "shiny gold"))
+}
 
 fn parse_bags(input: &str) -> Result<HashMap<&str, HashMap<&str, usize>>> {
     let mut bags = HashMap::new();
@@ -19,7 +32,7 @@ fn parse_bags(input: &str) -> Result<HashMap<&str, HashMap<&str, usize>>> {
             tuple::<_, _, (&str, ErrorKind), _>((take_until(" bags"), tag(" bags contain ")))(line)
                 .map_err(|e| eyre!("Parse Error: {}", e))?;
 
-        let bag_entry = bags.entry(this_bag).or_insert(HashMap::new());
+        let bag_entry = bags.entry(this_bag).or_insert_with(HashMap::new);
 
         if contained == "no other bags." {
             continue;
@@ -70,22 +83,6 @@ fn recursive_count(bag_rules: &HashMap<&str, HashMap<&str, usize>>, bag: &str) -
 
 fn part2(bag_rules: &HashMap<&str, HashMap<&str, usize>>, bag: &str) -> Result<usize> {
     Ok(recursive_count(bag_rules, bag) - 1)
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 7).open()?;
-    let (rules, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| parse_bags(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&rules, "shiny gold"))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&rules, "shiny gold"))?;
-
-    aoc_lib::display_results(
-        "Day 7: Handy Haversacks",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

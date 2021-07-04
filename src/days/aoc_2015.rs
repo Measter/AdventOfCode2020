@@ -1,10 +1,31 @@
-use std::num::ParseIntError;
-
-use aoc_lib::TracingAlloc;
+use aoc_lib::{day, Bench, BenchResult, UserError};
 use color_eyre::eyre::Result;
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 15: "Rambunctious Recitation"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let numbers: Vec<_> = input
+        .split(',')
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| part1(&numbers, 2020))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let numbers: Vec<_> = input
+        .split(',')
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| part1(&numbers, 30000000))
+}
 
 fn part1(numbers: &[u32], turns: u32) -> Result<u32> {
     let (last, rest) = numbers.split_last().unwrap();
@@ -24,33 +45,14 @@ fn part1(numbers: &[u32], turns: u32) -> Result<u32> {
         cur_number = next_number;
     }
 
-    return Ok(cur_number);
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 15).open()?;
-    let (numbers, parse_bench) = aoc_lib::bench::<_, ParseIntError>(&ALLOC, "Parse", &|| {
-        let res: Vec<_> = input.split(',').map(str::parse).collect::<Result<_, _>>()?;
-        Ok(res)
-    })?;
-
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&numbers, 2020))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part1(&numbers, 30000000))?;
-
-    aoc_lib::display_results(
-        "Day 15: Rambunctious Recitation",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
+    Ok(cur_number)
 }
 
 #[cfg(test)]
 mod tests_2015 {
     use super::*;
     use aoc_lib::{parsers::split_pair, Example};
+    use std::num::ParseIntError;
 
     #[test]
     fn part1_example() {

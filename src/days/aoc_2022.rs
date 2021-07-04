@@ -3,11 +3,26 @@ use std::{
     num::ParseIntError,
 };
 
-use aoc_lib::{parsers::split_pair, TracingAlloc};
-use color_eyre::eyre::Result;
+use aoc_lib::{day, parsers::split_pair, Bench, BenchResult, UserError};
+use color_eyre::{eyre::Result, Report};
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 22: "Crab Combat"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let (p1_deck, p2_deck) = parse_input(input).map_err(UserError)?;
+
+    b.bench(|| play_part1(p1_deck.clone(), p2_deck.clone()))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let (p1_deck, p2_deck) = parse_input(input).map_err(UserError)?;
+
+    b.bench(|| Ok::<_, Report>(play_part2(p1_deck.clone(), p2_deck.clone())?.1))
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Winner {
@@ -78,7 +93,7 @@ fn play_part2(mut p1_deck: VecDeque<u32>, mut p2_deck: VecDeque<u32>) -> Result<
     let mut round: u32 = 1;
 
     let (winner, mut winner_deck) = loop {
-        if seen_decks.insert((
+        let seen = seen_decks.insert((
             p1_deck
                 .iter()
                 .rev()
@@ -93,8 +108,8 @@ fn play_part2(mut p1_deck: VecDeque<u32>, mut p2_deck: VecDeque<u32>) -> Result<
                 .zip(1..)
                 .map(|(a, b)| a * b)
                 .sum(),
-        )) == false
-        {
+        ));
+        if !seen {
             // This configuration has already been seen.
             break (Winner::Player1, p1_deck);
         }
@@ -139,31 +154,6 @@ fn play_part2(mut p1_deck: VecDeque<u32>, mut p2_deck: VecDeque<u32>) -> Result<
         .sum();
 
     Ok((winner, score))
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 22).open()?;
-    let ((p1_deck, p2_deck), parse_bench) =
-        aoc_lib::bench(&ALLOC, "Parse", &|| parse_input(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
-        play_part1(p1_deck.clone(), p2_deck.clone())
-    })?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
-        play_part2(p1_deck.clone(), p2_deck.clone())
-    })?;
-
-    aoc_lib::display_results(
-        "Day 22: Crab Combat",
-        &[
-            (&"", parse_bench),
-            (&p1_res, p1_bench),
-            (&p2_res.1, p2_bench),
-        ],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -1,11 +1,42 @@
 use std::{collections::HashSet, hash::Hash, ops::RangeInclusive};
 
-use aoc_lib::TracingAlloc;
-use color_eyre::{eyre::Result, Report};
+use aoc_lib::{day, Bench, BenchResult, NoError, UserError};
+use color_eyre::eyre::Result;
 use itertools::iproduct;
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 17: "Conway Cubes"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let state = parse::<[i8; 3]>(&input).map_err(UserError)?;
+    let game = GameField::new(state, get_neighbours_3d);
+
+    b.bench(|| {
+        let mut state = game.clone();
+        for _ in 0..6 {
+            state.step();
+        }
+
+        Ok::<_, NoError>(state.count_active())
+    })
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let state = parse::<[i8; 4]>(&input).map_err(UserError)?;
+    let game = GameField::new(state, get_neighbours_4d);
+
+    b.bench(|| {
+        let mut state = game.clone();
+        for _ in 0..6 {
+            state.step();
+        }
+
+        Ok::<_, NoError>(state.count_active())
+    })
+}
 
 fn parse<T>(input: &str) -> Result<HashSet<T>>
 where
@@ -111,48 +142,6 @@ where
     fn count_active(&self) -> usize {
         self.state.len()
     }
-}
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 17).open()?;
-    let (game_3d, parse3d_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Parse 3D", &|| {
-        let state = parse::<[i8; 3]>(&input)?;
-        Ok(GameField::new(state, get_neighbours_3d))
-    })?;
-    let (game_4d, parse4d_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Parse 4D", &|| {
-        let state = parse::<[i8; 4]>(&input)?;
-        Ok(GameField::new(state, get_neighbours_4d))
-    })?;
-
-    let (p1_res, p1_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 1", &|| {
-        let mut state = game_3d.clone();
-        for _ in 0..6 {
-            state.step();
-        }
-
-        Ok(state.count_active())
-    })?;
-    let (p2_res, p2_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 2", &|| {
-        let mut state = game_4d.clone();
-        for _ in 0..6 {
-            state.step();
-        }
-
-        Ok(state.count_active())
-    })?;
-
-    aoc_lib::display_results(
-        "Day 17: Conway Cubes",
-        &[
-            (&"", parse3d_bench),
-            (&"", parse4d_bench),
-            (&p1_res, p1_bench),
-            (&p2_res, p2_bench),
-        ],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -1,10 +1,39 @@
-use aoc_lib::TracingAlloc;
+use aoc_lib::{day, Bench, BenchResult, UserError};
 use color_eyre::eyre::Result;
 
-use std::{collections::HashMap, num::ParseIntError};
+use std::collections::HashMap;
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 10: "Adapter Array"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let mut adaptors: Vec<_> = input
+        .lines()
+        .map(str::trim)
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    adaptors.sort_unstable();
+
+    b.bench(|| part1(&adaptors))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let mut adaptors: Vec<_> = input
+        .lines()
+        .map(str::trim)
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    adaptors.sort_unstable();
+
+    b.bench(|| part2(&adaptors))
+}
 
 fn part1(adaptors: &[u64]) -> Result<u64> {
     let [_, ones, _, threes] =
@@ -39,44 +68,17 @@ fn part2_search(adaptors: &[u64], db: &mut HashMap<u64, u64>) -> u64 {
 fn part2(adaptors: &[u64]) -> Result<u64> {
     let mut new_adaptors = vec![0];
     new_adaptors.extend_from_slice(adaptors);
-    new_adaptors.sort();
+    new_adaptors.sort_unstable();
 
     let mut db = HashMap::new();
     Ok(part2_search(&new_adaptors, &mut db))
 }
 
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 10).open()?;
-
-    let (mut adaptors, parse_bench) = aoc_lib::bench::<_, ParseIntError>(&ALLOC, "Parse", &|| {
-        let res: Vec<_> = input
-            .lines()
-            .map(str::trim)
-            .map(str::parse)
-            .collect::<Result<_, _>>()?;
-        Ok(res)
-    })?;
-
-    adaptors.sort();
-
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&adaptors))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&adaptors))?;
-
-    aoc_lib::display_results(
-        "Day 10: Adapter Array",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests_2010 {
-    use aoc_lib::Example;
-
     use super::*;
+    use aoc_lib::Example;
+    use std::num::ParseIntError;
 
     #[test]
     fn part1_example1() {

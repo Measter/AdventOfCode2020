@@ -1,8 +1,31 @@
-use aoc_lib::TracingAlloc;
+use aoc_lib::{day, Bench, BenchResult, NoError, UserError};
 use color_eyre::eyre::{eyre, Result};
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 11: "Seating System"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let floor = WaitingArea::parse(input).map_err(UserError)?;
+
+    b.bench(|| {
+        let mut floor = floor.clone();
+        floor.run(&WaitingArea::count_neighbours_part1, 4);
+        Ok::<_, NoError>(floor.occupied_seats())
+    })
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let floor = WaitingArea::parse(input).map_err(UserError)?;
+
+    b.bench(|| {
+        let mut floor = floor.clone();
+        floor.run(&WaitingArea::count_neighbours_part2, 5);
+        Ok::<_, NoError>(floor.occupied_seats())
+    })
+}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Tile {
@@ -182,30 +205,6 @@ impl WaitingArea {
             .filter(|t| **t == Tile::Occupied)
             .count()
     }
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 11).open()?;
-    let (floor, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| WaitingArea::parse(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 1", &|| {
-        let mut floor = floor.clone();
-        floor.run(&WaitingArea::count_neighbours_part1, 4);
-        Ok(floor.occupied_seats())
-    })?;
-    let (p2_res, p2_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 2", &|| {
-        let mut floor = floor.clone();
-        floor.run(&WaitingArea::count_neighbours_part2, 5);
-        Ok(floor.occupied_seats())
-    })?;
-
-    aoc_lib::display_results(
-        "Day 11: Seating System",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

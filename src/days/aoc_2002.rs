@@ -1,17 +1,37 @@
-#![allow(clippy::unnecessary_wraps, clippy::clippy::ptr_arg)]
-
-use aoc_lib::{parsers::unsigned_number, TracingAlloc};
-use color_eyre::{
-    eyre::{eyre, Result},
-    Report,
-};
+use aoc_lib::{day, parsers::unsigned_number, Bench, BenchResult, UserError};
+use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::{tag, take_till1, take_while1},
     sequence::tuple,
 };
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 2: "Passward Philosophy"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let inputs: Vec<_> = input
+        .lines()
+        .map(str::trim)
+        .map(Password::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| part1(&inputs))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let inputs: Vec<_> = input
+        .lines()
+        .map(str::trim)
+        .map(Password::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| part2(&inputs))
+}
 
 #[derive(Debug, PartialEq)]
 struct Password<'a> {
@@ -68,30 +88,6 @@ fn part2(inputs: &[Password]) -> Result<usize> {
         .map(Password::part2_is_valid)
         .filter(|p| *p)
         .count())
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 2).open()?;
-    let (inputs, parse_bench) = aoc_lib::bench::<_, Report>(&ALLOC, "Parse", &|| {
-        let res: Vec<_> = input
-            .lines()
-            .map(str::trim)
-            .map(Password::parse)
-            .collect::<Result<_>>()?;
-        Ok(res)
-    })?;
-
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&inputs))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&inputs))?;
-
-    aoc_lib::display_results(
-        "Day 2: Password Philosophy",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

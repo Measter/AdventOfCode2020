@@ -5,8 +5,9 @@ use std::{
 };
 
 use aoc_lib::{
+    day,
     parsers::{split_pair, unsigned_number},
-    TracingAlloc,
+    Bench, BenchResult, UserError,
 };
 use color_eyre::eyre::{eyre, Result};
 use itertools::Itertools;
@@ -15,8 +16,21 @@ use nom::{
     sequence::tuple,
 };
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 16: "Ticket Translation"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let ticket_data = TicketData::parse(input).map_err(UserError)?;
+    b.bench(|| ticket_data.sum_invalid_fields())
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let ticket_data = TicketData::parse(input).map_err(UserError)?;
+    b.bench(|| part2(&ticket_data))
+}
 
 type ValidationInfo<'a> = HashMap<&'a str, [RangeInclusive<u64>; 2]>;
 
@@ -78,8 +92,7 @@ impl<'a> TicketData<'a> {
         ticket.iter().all(|field| {
             self.validation_rules
                 .values()
-                .find(|[first, second]| first.contains(field) || second.contains(field))
-                .is_some()
+                .any(|[first, second]| first.contains(field) || second.contains(field))
         })
     }
 
@@ -173,24 +186,6 @@ fn part2(data: &TicketData) -> Result<u64> {
         .product();
 
     Ok(result)
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 16).open()?;
-    let (ticket_data, parse_bench) =
-        aoc_lib::bench(&ALLOC, "Parse", &|| TicketData::parse(&input))?;
-    let (p1_res, p1_bench) =
-        aoc_lib::bench(&ALLOC, "Part 1", &|| ticket_data.sum_invalid_fields())?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&ticket_data))?;
-
-    aoc_lib::display_results(
-        "Day 16: Ticket Translation",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

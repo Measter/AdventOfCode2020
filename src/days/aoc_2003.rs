@@ -1,10 +1,24 @@
-#![allow(clippy::unnecessary_wraps)]
-
-use aoc_lib::TracingAlloc;
+use aoc_lib::{day, Bench, BenchResult, UserError};
 use color_eyre::eyre::{eyre, Result};
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 3: "Toboggan Trajectory"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let map = Map::parse(input).map_err(UserError)?;
+
+    b.bench(|| map.count_trees(3, 1))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let map = Map::parse(input).map_err(UserError)?;
+
+    b.bench(|| part2(&map))
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Tile {
     Open = 0,
@@ -68,22 +82,6 @@ fn part2(map: &Map) -> Result<u32> {
         .copied()
         .map(|(dx, dy)| map.count_trees(dx, dy))
         .try_fold(1, |acc, item| item.map(|i| acc * i))
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 3).open()?;
-    let (map, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| Map::parse(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| map.count_trees(3, 1))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&map))?;
-
-    aoc_lib::display_results(
-        "Day 3: Toboggan Trajectory",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

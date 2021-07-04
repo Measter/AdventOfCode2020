@@ -1,10 +1,27 @@
 use std::collections::HashSet;
 
-use aoc_lib::{parsers::split_pair, TracingAlloc};
+use aoc_lib::{day, parsers::split_pair, Bench, BenchResult, UserError};
 use color_eyre::eyre::{eyre, Result};
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 8: "Handheld Halting"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let instrs = Instruction::parse(input).map_err(UserError)?;
+    b.bench(|| {
+        let mut computer = Computer::default();
+        let mut seen_pc = HashSet::new();
+        part1(&instrs, &mut computer, &mut seen_pc)
+    })
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let instrs = Instruction::parse(input).map_err(UserError)?;
+    b.bench(|| part2(&instrs))
+}
 
 const VALID_VAL_START: &[char] = &['-', '+'];
 
@@ -121,26 +138,6 @@ fn part2(instrs: &[Instruction]) -> Result<i64> {
     }
 
     Err(eyre!("No instruction swap worked"))
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 8).open()?;
-    let (instrs, parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| Instruction::parse(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| {
-        let mut computer = Computer::default();
-        let mut seen_pc = HashSet::new();
-        part1(&instrs, &mut computer, &mut seen_pc)
-    })?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&instrs))?;
-
-    aoc_lib::display_results(
-        "Day 8: Handheld Halting",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

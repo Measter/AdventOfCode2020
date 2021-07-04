@@ -1,6 +1,7 @@
 use aoc_lib::{
+    day,
     parsers::{split_pair, unsigned_number},
-    TracingAlloc,
+    Bench, BenchResult, UserError,
 };
 use color_eyre::{
     eyre::{eyre, Result},
@@ -16,8 +17,37 @@ use nom::{
 
 use std::{collections::HashMap, num::ParseIntError};
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 19: "Monster Messages"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let (rules, data) = parse_input(input).map_err(UserError)?;
+
+    b.bench(|| get_valid_count(&rules, &data))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let (mut rules, data) = parse_input(input).map_err(UserError)?;
+    rules.insert(
+        8,
+        RuleValidation::Either {
+            left: vec![42],
+            right: vec![42, 8],
+        },
+    );
+    rules.insert(
+        11,
+        RuleValidation::Either {
+            left: vec![42, 31],
+            right: vec![42, 11, 31],
+        },
+    );
+
+    b.bench(|| get_valid_count(&rules, &data))
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum SuccessType<'a> {
@@ -317,39 +347,6 @@ fn print_rules(rules: &HashMap<usize, RuleValidation>) {
             RuleValidation::Either { left, right } => eprintln!("{:?} | {:?}", left, right),
         }
     }
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 19).open()?;
-    let ((rules, data), parse_bench) = aoc_lib::bench(&ALLOC, "Parse", &|| parse_input(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| get_valid_count(&rules, &data))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| {
-        let mut rules = rules.clone();
-        rules.insert(
-            8,
-            RuleValidation::Either {
-                left: vec![42],
-                right: vec![42, 8],
-            },
-        );
-        rules.insert(
-            11,
-            RuleValidation::Either {
-                left: vec![42, 31],
-                right: vec![42, 11, 31],
-            },
-        );
-        get_valid_count(&rules, &data)
-    })?;
-
-    aoc_lib::display_results(
-        "Day 19: Monster Messages",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -1,11 +1,26 @@
 use std::num::ParseIntError;
 
-use aoc_lib::{parsers::split_pair, TracingAlloc};
+use aoc_lib::{day, parsers::split_pair, Bench, BenchResult, NoError, UserError};
 use color_eyre::eyre::{eyre, Result};
 use nom::bytes::complete::take_while;
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 4: "Passport Processing"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let passports = Passport::parse_passports(input).map_err(UserError)?;
+
+    b.bench(|| Ok::<_, NoError>(passports.iter().filter(|p| p.is_valid_part1()).count()))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let passports = Passport::parse_passports(input).map_err(UserError)?;
+
+    b.bench(|| Ok::<_, NoError>(passports.iter().filter(|p| p.is_valid_part2()).count()))
+}
 
 #[derive(Debug, PartialEq, Default)]
 struct Passport<'a> {
@@ -55,16 +70,19 @@ impl<'a> Passport<'a> {
     }
 
     fn is_valid_part1(&self) -> bool {
-        matches!(self, Passport {
-            birth_year: Some(_),
-            issue_year: Some(_),
-            expiration_year: Some(_),
-            height: Some(_),
-            hair_color: Some(_),
-            eye_color: Some(_),
-            passport_id: Some(_),
-            country_id: _,
-        })
+        matches!(
+            self,
+            Passport {
+                birth_year: Some(_),
+                issue_year: Some(_),
+                expiration_year: Some(_),
+                height: Some(_),
+                hair_color: Some(_),
+                eye_color: Some(_),
+                passport_id: Some(_),
+                country_id: _,
+            }
+        )
     }
 
     fn is_height_valid(hgt: &str) -> bool {
@@ -104,27 +122,6 @@ impl<'a> Passport<'a> {
             if Passport::is_height_valid(hgt) && Passport::is_hair_color_valid(hcl) && Passport::is_eye_color_valid(ecl) && Passport::is_passport_id_valid(pid)
         )
     }
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 4).open()?;
-    let (passports, parse_bench) =
-        aoc_lib::bench(&ALLOC, "Parse", &|| Passport::parse_passports(&input))?;
-    let (p1_res, p1_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 1", &|| {
-        Ok(passports.iter().filter(|p| p.is_valid_part1()).count())
-    })?;
-    let (p2_res, p2_bench) = aoc_lib::bench::<_, ()>(&ALLOC, "Part 2", &|| {
-        Ok(passports.iter().filter(|p| p.is_valid_part2()).count())
-    })?;
-
-    aoc_lib::display_results(
-        "Day 4: Passport Processing",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

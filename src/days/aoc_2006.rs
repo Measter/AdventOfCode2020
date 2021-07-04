@@ -1,10 +1,21 @@
 use std::collections::HashSet;
 
-use aoc_lib::TracingAlloc;
+use aoc_lib::{day, Bench, BenchResult};
 use color_eyre::eyre::Result;
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 6: "Custom Customs"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| part1(input))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| part2(input))
+}
 
 fn part1(input: &str) -> Result<usize> {
     let groups = input.split("\n\n");
@@ -48,21 +59,6 @@ fn part2(input: &str) -> Result<usize> {
     }
 
     Ok(sum)
-}
-
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 6).open()?;
-    let (p1_res, p1_bench) = aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&input))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&input))?;
-
-    aoc_lib::display_results(
-        "Day 6: Custom Customs",
-        &[(&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
 }
 
 #[cfg(test)]

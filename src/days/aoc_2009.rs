@@ -1,9 +1,33 @@
-use aoc_lib::TracingAlloc;
+use aoc_lib::{day, Bench, BenchResult, UserError};
 use color_eyre::eyre::{eyre, Result};
-use std::num::ParseIntError;
 
-#[global_allocator]
-static ALLOC: TracingAlloc = TracingAlloc::new();
+day! {
+    day 9: "Encoding Error"
+    1: run_part1
+    2: run_part2
+}
+
+fn run_part1(input: &str, b: Bench) -> BenchResult {
+    let sequence: Vec<_> = input
+        .lines()
+        .map(str::trim)
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| part1(&sequence, 25).map(|(_, r)| r))
+}
+
+fn run_part2(input: &str, b: Bench) -> BenchResult {
+    let sequence: Vec<_> = input
+        .lines()
+        .map(str::trim)
+        .map(str::parse)
+        .collect::<Result<_, _>>()
+        .map_err(UserError)?;
+
+    b.bench(|| part2(&sequence, 25))
+}
 
 fn part1(input: &[u64], preamble_len: usize) -> Result<(usize, u64)> {
     'outer: for (idx, window) in input.windows(preamble_len + 1).enumerate() {
@@ -44,35 +68,11 @@ fn part2(input: &[u64], preamble_len: usize) -> Result<u64> {
     Err(eyre!("No sequence found"))
 }
 
-fn main() -> Result<()> {
-    color_eyre::install()?;
-
-    let input = aoc_lib::input(2020, 9).open()?;
-    let (sequence, parse_bench) = aoc_lib::bench::<_, ParseIntError>(&ALLOC, "Parse", &|| {
-        let res: Vec<_> = input
-            .lines()
-            .map(str::trim)
-            .map(str::parse)
-            .collect::<Result<_, _>>()?;
-        Ok(res)
-    })?;
-    let (p1_res, p1_bench) =
-        aoc_lib::bench(&ALLOC, "Part 1", &|| part1(&sequence, 25).map(|(_, r)| r))?;
-    let (p2_res, p2_bench) = aoc_lib::bench(&ALLOC, "Part 2", &|| part2(&sequence, 25))?;
-
-    aoc_lib::display_results(
-        "Day 9: Encoding Error",
-        &[(&"", parse_bench), (&p1_res, p1_bench), (&p2_res, p2_bench)],
-    );
-
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests_2009 {
-    use aoc_lib::Example;
-
     use super::*;
+    use aoc_lib::Example;
+    use std::num::ParseIntError;
 
     #[test]
     fn part1_example() {
