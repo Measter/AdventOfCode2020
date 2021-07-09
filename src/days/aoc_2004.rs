@@ -100,10 +100,6 @@ impl<'a> Passport<'a> {
         hcl[1..].chars().all(|c| c.is_ascii_hexdigit()) && hcl.len() == 7
     }
 
-    fn is_eye_color_valid(ecl: &str) -> bool {
-        matches!(ecl, "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth")
-    }
-
     fn is_passport_id_valid(pid: &str) -> bool {
         pid.chars().all(|c| c.is_ascii_digit()) && pid.len() == 9
     }
@@ -115,11 +111,11 @@ impl<'a> Passport<'a> {
                 expiration_year: Some(2020..=2030),
                 height: Some(hgt),
                 hair_color: Some(hcl),
-                eye_color: Some(ecl),
+                eye_color: Some("amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth"),
                 passport_id: Some(pid),
                 country_id: _,
             }
-            if Passport::is_height_valid(hgt) && Passport::is_hair_color_valid(hcl) && Passport::is_eye_color_valid(ecl) && Passport::is_passport_id_valid(pid)
+            if Passport::is_height_valid(hgt) && Passport::is_hair_color_valid(hcl) && Passport::is_passport_id_valid(pid)
         )
     }
 }

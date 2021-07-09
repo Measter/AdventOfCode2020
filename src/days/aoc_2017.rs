@@ -1,4 +1,8 @@
-use std::{collections::HashSet, hash::Hash, ops::RangeInclusive};
+use std::{
+    collections::HashSet,
+    hash::Hash,
+    ops::{IndexMut, RangeInclusive},
+};
 
 use aoc_lib::{day, Bench, BenchResult, NoError, UserError};
 use color_eyre::eyre::Result;
@@ -40,16 +44,15 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
 
 fn parse<T>(input: &str) -> Result<HashSet<T>>
 where
-    T: Default + AsMut<[i8]> + Eq + Hash,
+    T: Default + IndexMut<usize, Output = i8> + Eq + Hash,
 {
     let mut state = HashSet::new();
 
     for (line, y) in input.lines().zip(0..) {
         for (_, x) in line.chars().zip(0..).filter(|(c, _)| *c == '#') {
             let mut cell = T::default();
-            let cell_ref = cell.as_mut();
-            cell_ref[0] = x;
-            cell_ref[1] = y;
+            cell[0] = x;
+            cell[1] = y;
             state.insert(cell);
         }
     }

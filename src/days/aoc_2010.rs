@@ -1,4 +1,4 @@
-use aoc_lib::{day, Bench, BenchResult, UserError};
+use aoc_lib::{day, misc::ArrWindows, Bench, BenchResult, UserError};
 use color_eyre::eyre::Result;
 
 use std::collections::HashMap;
@@ -37,9 +37,8 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
 
 fn part1(adaptors: &[u64]) -> Result<u64> {
     let [_, ones, _, threes] =
-        adaptors
-            .windows(2)
-            .map(|pair| pair[1] - pair[0])
+        ArrWindows::new(adaptors)
+            .map(|[a, b]| b - a)
             .fold([1; 4], |mut counts, it| {
                 counts[it as usize] += 1;
                 counts
@@ -48,9 +47,10 @@ fn part1(adaptors: &[u64]) -> Result<u64> {
 }
 
 fn part2_search(adaptors: &[u64], db: &mut HashMap<u64, u64>) -> u64 {
-    match adaptors.split_first() {
-        Some((_, [])) => 1,
-        Some((first, rest)) => rest
+    match adaptors {
+        [] => 0, // Shouldn't get an empty list, but just in case...
+        [_] => 1,
+        [first, rest @ ..] => rest
             .iter()
             .take_while(|a| *a - first <= 3)
             .enumerate()
@@ -61,7 +61,6 @@ fn part2_search(adaptors: &[u64], db: &mut HashMap<u64, u64>) -> u64 {
                 })
             })
             .sum(),
-        None => 0, // Shouldn't get an empty list, but just in case...
     }
 }
 

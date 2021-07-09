@@ -12,7 +12,7 @@ fn run_part1(input: &str, b: Bench) -> BenchResult {
 
     b.bench(|| {
         let mut floor = floor.clone();
-        floor.run(&WaitingArea::count_neighbours_part1, 4);
+        floor.run(WaitingArea::count_neighbours_part1, 4);
         Ok::<_, NoError>(floor.occupied_seats())
     })
 }
@@ -22,10 +22,12 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
 
     b.bench(|| {
         let mut floor = floor.clone();
-        floor.run(&WaitingArea::count_neighbours_part2, 5);
+        floor.run(WaitingArea::count_neighbours_part2, 5);
         Ok::<_, NoError>(floor.occupied_seats())
     })
 }
+
+type NeighbourFunc = fn(&[Tile], usize, usize, usize, usize) -> usize;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum Tile {
@@ -93,11 +95,9 @@ impl WaitingArea {
             let new_y = (y as isize) + rel_y;
 
             let idx = (new_y * width + new_x) as usize;
-            if new_x < 0 || new_x >= width || new_y < 0 || new_y >= height {
-                false
-            } else {
-                floor[idx] == Tile::Occupied
-            }
+            (0..width).contains(&new_x)
+                && (0..height).contains(&new_y)
+                && floor[idx] == Tile::Occupied
         };
 
         [
@@ -131,7 +131,7 @@ impl WaitingArea {
 
             loop {
                 let idx = (new_y * width + new_x) as usize;
-                if new_x < 0 || new_x >= width || new_y < 0 || new_y >= height {
+                if !(0..width).contains(&new_x) || !(0..height).contains(&new_y) {
                     return false;
                 } else if floor[idx] != Tile::Floor {
                     return floor[idx] == Tile::Occupied;
@@ -157,10 +157,7 @@ impl WaitingArea {
         .count()
     }
 
-    fn step<F>(&mut self, neighbour_fn: F, max_filled: usize)
-    where
-        F: Fn(&[Tile], usize, usize, usize, usize) -> usize,
-    {
+    fn step(&mut self, neighbour_fn: NeighbourFunc, max_filled: usize) {
         let buffer = &mut self.buf;
         let floor_space = &self.floor_space;
 
@@ -190,12 +187,9 @@ impl WaitingArea {
         std::mem::swap(&mut self.floor_space, &mut self.buf);
     }
 
-    fn run<F>(&mut self, neighbour_fn: F, max_seats: usize)
-    where
-        F: Fn(&[Tile], usize, usize, usize, usize) -> usize,
-    {
+    fn run(&mut self, neighbour_fn: NeighbourFunc, max_seats: usize) {
         while self.floor_space != self.buf {
-            self.step(&neighbour_fn, max_seats);
+            self.step(neighbour_fn, max_seats);
         }
     }
 

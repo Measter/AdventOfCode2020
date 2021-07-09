@@ -1,4 +1,4 @@
-use aoc_lib::{day, Bench, BenchResult};
+use aoc_lib::{day, misc::ArrWindows, Bench, BenchResult};
 use color_eyre::eyre::{eyre, Report, Result};
 
 day! {
@@ -67,10 +67,9 @@ fn part2(input: &str) -> Result<u16> {
 
     seats.sort_unstable();
 
-    seats
-        .windows(2)
-        .filter(|pair| pair[1] - pair[0] != 1)
-        .map(|pair| pair[0] + 1)
+    ArrWindows::new(&seats)
+        .filter(|[a, b]| b - a != 1)
+        .map(|[a, _]| a + 1)
         .next()
         .ok_or_else(|| eyre!("Seat not found"))
 }

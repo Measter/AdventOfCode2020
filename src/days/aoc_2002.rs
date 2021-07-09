@@ -75,19 +75,11 @@ impl<'a> Password<'a> {
 }
 
 fn part1(inputs: &[Password]) -> Result<usize> {
-    Ok(inputs
-        .iter()
-        .map(Password::part1_is_valid)
-        .filter(|p| *p)
-        .count())
+    Ok(inputs.iter().filter(|p| p.part1_is_valid()).count())
 }
 
 fn part2(inputs: &[Password]) -> Result<usize> {
-    Ok(inputs
-        .iter()
-        .map(Password::part2_is_valid)
-        .filter(|p| *p)
-        .count())
+    Ok(inputs.iter().filter(|p| p.part2_is_valid()).count())
 }
 
 #[cfg(test)]

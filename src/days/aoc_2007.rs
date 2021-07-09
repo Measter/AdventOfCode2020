@@ -55,9 +55,9 @@ fn recursive_search<'a>(
     seen: &mut HashSet<&'a str>,
 ) {
     for (cur_bag, contains) in bag_rules {
-        if contains.contains_key(bag) {
-            seen.insert(*cur_bag);
-
+        if contains.contains_key(bag) && seen.insert(*cur_bag) {
+            // If we've already seen the cur_bag, there's no reason to continue
+            // up the chain.
             recursive_search(bag_rules, cur_bag, seen)
         }
     }
