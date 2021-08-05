@@ -28,6 +28,7 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
 }
 
 fn part1(numbers: &[u32], turns: u32) -> Result<u32> {
+    assert!(numbers.iter().all(|&n| n < turns));
     let (last, rest) = numbers.split_last().unwrap();
 
     let mut last_seen = vec![u32::MAX; turns as usize];
@@ -36,14 +37,12 @@ fn part1(numbers: &[u32], turns: u32) -> Result<u32> {
         .zip(1u32..)
         .for_each(|(n, turn)| last_seen[n as usize] = turn);
 
-    let mut cur_number = *last;
-
     let start = numbers.len() as u32;
-    for i in start..turns {
-        let next_number = i.saturating_sub(last_seen[cur_number as usize]);
-        last_seen[cur_number as usize] = i;
-        cur_number = next_number;
-    }
+    let cur_number = (start..turns).fold(*last, |cur_number, i| {
+        // SAFETY: cur_number will always be < last_seen.len()
+        let last_turn_seen = unsafe { last_seen.get_unchecked_mut(cur_number as usize) };
+        i.saturating_sub(std::mem::replace(last_turn_seen, i))
+    });
 
     Ok(cur_number)
 }
