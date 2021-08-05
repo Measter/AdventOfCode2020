@@ -21,7 +21,7 @@ fn run_part1(input: &str, b: Bench) -> BenchResult {
     b.bench(|| {
         input
             .iter()
-            .map(|e| Operator::evaluate(&e))
+            .map(|e| Operator::evaluate(e))
             .try_fold(0, |acc, res| Ok::<_, Report>(acc + res?))
             .map_err(UserError)
     })
@@ -37,7 +37,7 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
     b.bench(|| {
         input
             .iter()
-            .map(|e| Operator::evaluate(&e))
+            .map(|e| Operator::evaluate(e))
             .try_fold(0, |acc, res| Ok::<_, Report>(acc + res?))
             .map_err(UserError)
     })

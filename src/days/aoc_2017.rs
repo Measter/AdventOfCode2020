@@ -15,7 +15,7 @@ day! {
 }
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
-    let state = parse::<[i8; 3]>(&input).map_err(UserError)?;
+    let state = parse::<[i8; 3]>(input).map_err(UserError)?;
     let game = GameField::new(state, get_neighbours_3d);
 
     b.bench(|| {
@@ -29,7 +29,7 @@ fn run_part1(input: &str, b: Bench) -> BenchResult {
 }
 
 fn run_part2(input: &str, b: Bench) -> BenchResult {
-    let state = parse::<[i8; 4]>(&input).map_err(UserError)?;
+    let state = parse::<[i8; 4]>(input).map_err(UserError)?;
     let game = GameField::new(state, get_neighbours_4d);
 
     b.bench(|| {

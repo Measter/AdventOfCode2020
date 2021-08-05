@@ -224,8 +224,8 @@ mod tests_2011 {
             ..
         } = WaitingArea::parse(&end_input).unwrap();
 
-        floor.step(&WaitingArea::count_neighbours_part1, 4);
-        floor.step(&WaitingArea::count_neighbours_part1, 4);
+        floor.step(WaitingArea::count_neighbours_part1, 4);
+        floor.step(WaitingArea::count_neighbours_part1, 4);
 
         assert_eq!(floor.floor_space, expected);
     }
@@ -247,7 +247,7 @@ mod tests_2011 {
             ..
         } = WaitingArea::parse(&end_input).unwrap();
 
-        floor.run(&WaitingArea::count_neighbours_part1, 4);
+        floor.run(WaitingArea::count_neighbours_part1, 4);
 
         let expected_count = 37;
         let actual = floor.occupied_seats();
@@ -272,7 +272,7 @@ mod tests_2011 {
             ..
         } = WaitingArea::parse(&end_input).unwrap();
 
-        floor.run(&WaitingArea::count_neighbours_part2, 5);
+        floor.run(WaitingArea::count_neighbours_part2, 5);
 
         let expected_count = 26;
         let actual = floor.occupied_seats();

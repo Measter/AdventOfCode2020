@@ -106,7 +106,7 @@ fn part1(
     seen_pc.clear();
 
     while seen_pc.insert(computer.pc) {
-        computer.step(&instrs)?;
+        computer.step(instrs)?;
     }
 
     Ok(computer.acc)
