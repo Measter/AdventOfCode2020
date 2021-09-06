@@ -3,10 +3,7 @@ use aoc_lib::{
     parsers::{split_pair, unsigned_number},
     Bench, BenchResult, UserError,
 };
-use color_eyre::{
-    eyre::{eyre, Result},
-    Report,
-};
+use color_eyre::eyre::{eyre, Result};
 use nom::{
     bytes::complete::tag,
     character::complete::{anychar, char},
@@ -54,6 +51,13 @@ enum SuccessType<'a> {
     Finish,
     Remainder(&'a str),
     Branch(Vec<&'a str>),
+}
+
+#[derive(Debug)]
+enum RuleError<'a> {
+    NotFound(usize),
+    IncompleteSequence,
+    PatternNotFound(char, &'a str),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -104,7 +108,7 @@ impl RuleValidation {
         rules: &HashMap<usize, RuleValidation>,
         input: &'a str,
         depth: usize,
-    ) -> Result<SuccessType<'a>, (&'a str, Report)> {
+    ) -> Result<SuccessType<'a>, (&'a str, RuleError<'a>)> {
         let (id, rem_seq) = match sequence.split_first() {
             None if input.is_empty() => {
                 // eprintln!("Seq Finished - Depth: {}", depth);
@@ -123,25 +127,25 @@ impl RuleValidation {
         // );
         let rule = rules
             .get(id)
-            .ok_or_else(|| (input, eyre!("Id not found in ruleset: {}", id)))?;
+            .ok_or_else(|| (input, RuleError::NotFound(*id)))?;
 
         // Need special handling here, so we can backtrack and try the right side if the left fails.
         match rule {
             RuleValidation::Either { left, right } => {
                 let calc_side = |side: &[usize]| {
                     RuleValidation::test_seq(side, rules, input, depth + 1).and_then(
-                        |rem| -> Result<SuccessType, (&str, Report)> {
+                        |rem| -> Result<SuccessType, (&str, RuleError)> {
                             // eprintln!("Continuing sequence: {:?} from 1: {:?}", sequence, rem_seq);
                             match rem {
                                 SuccessType::Finish if rem_seq.is_empty() => {
                                     Ok(SuccessType::Finish)
                                 }
-                                SuccessType::Finish => Err((input, eyre!("Incomplete sequence"))),
+                                SuccessType::Finish => Err((input, RuleError::IncompleteSequence)),
                                 SuccessType::Remainder(rem) => {
                                     RuleValidation::test_seq(rem_seq, rules, rem, depth)
                                 }
                                 SuccessType::Branch(branches) => {
-                                    let mut success_branches = Vec::new();
+                                    let mut success_branches = Vec::with_capacity(30);
                                     let mut last_err = None;
 
                                     for branch in branches {
@@ -200,11 +204,11 @@ impl RuleValidation {
                 }
             }
             _ => rule.test_rule(rules, input, depth + 1).and_then(
-                |rem| -> Result<SuccessType, (&str, Report)> {
+                |rem| -> Result<SuccessType, (&str, RuleError)> {
                     // eprintln!("Continuing sequences: {:?} from 1: {:?}", sequence, rem_seq);
                     match rem {
                         SuccessType::Finish if rem_seq.is_empty() => Ok(SuccessType::Finish),
-                        SuccessType::Finish => Err((input, eyre!("Incomplete sequence"))),
+                        SuccessType::Finish => Err((input, RuleError::IncompleteSequence)),
                         SuccessType::Remainder(rem) => {
                             RuleValidation::test_seq(rem_seq, rules, rem, depth)
                         }
@@ -239,7 +243,7 @@ impl RuleValidation {
         rules: &HashMap<usize, RuleValidation>,
         input: &'a str,
         depth: usize,
-    ) -> Result<SuccessType<'a>, (&'a str, Report)> {
+    ) -> Result<SuccessType<'a>, (&'a str, RuleError<'a>)> {
         // eprint!("Depth: {} - Testing: {} - ", depth, input);
         match self {
             RuleValidation::Const(c) => {
@@ -254,10 +258,7 @@ impl RuleValidation {
                     }
                 } else {
                     // eprintln!("Err");
-                    Err((
-                        input,
-                        eyre!("Pattern `{}` not found in input: {}", c, input),
-                    ))
+                    Err((input, RuleError::PatternNotFound(*c, input)))
                 }
             }
             RuleValidation::Seq(seq) => {
