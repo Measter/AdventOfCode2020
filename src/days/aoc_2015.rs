@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use aoc_lib::{day, Bench, BenchResult, UserError};
 use color_eyre::eyre::Result;
 
@@ -14,7 +16,7 @@ fn run_part1(input: &str, b: Bench) -> BenchResult {
         .collect::<Result<_, _>>()
         .map_err(UserError)?;
 
-    b.bench(|| part1(&numbers, 2020))
+    b.bench(|| part1::<2020>(&numbers))
 }
 
 fn run_part2(input: &str, b: Bench) -> BenchResult {
@@ -24,21 +26,22 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
         .collect::<Result<_, _>>()
         .map_err(UserError)?;
 
-    b.bench(|| part1(&numbers, 30000000))
+    b.bench(|| part1::<30000000>(&numbers))
 }
 
-fn part1(numbers: &[u32], turns: u32) -> Result<u32> {
-    assert!(numbers.iter().all(|&n| n < turns));
+fn part1<const TURNS: usize>(numbers: &[u32]) -> Result<u32> {
+    assert!(numbers.iter().all(|&n| n < TURNS as u32));
     let (last, rest) = numbers.split_last().unwrap();
 
-    let mut last_seen = vec![u32::MAX; turns as usize];
+    let mut last_seen = vec![u32::MAX; TURNS as usize];
+    let last_seen: &mut [u32; TURNS] = last_seen.as_mut_slice().try_into().unwrap();
     rest.iter()
         .copied()
         .zip(1u32..)
         .for_each(|(n, turn)| last_seen[n as usize] = turn);
 
     let start = numbers.len() as u32;
-    let cur_number = (start..turns).fold(*last, |cur_number, i| {
+    let cur_number = (start..TURNS as u32).fold(*last, |cur_number, i| {
         // SAFETY: cur_number will always be < last_seen.len()
         let last_turn_seen = unsafe { last_seen.get_unchecked_mut(cur_number as usize) };
         i.saturating_sub(std::mem::replace(last_turn_seen, i))
@@ -69,7 +72,7 @@ mod tests_2015 {
                 .collect::<Result<_, ParseIntError>>()
                 .unwrap();
 
-            let actual = part1(&input, 2020).unwrap();
+            let actual = part1::<2020>(&input).unwrap();
             assert_eq!(actual, expected);
         }
     }
@@ -90,7 +93,7 @@ mod tests_2015 {
                 .collect::<Result<_, ParseIntError>>()
                 .unwrap();
 
-            let actual = part1(&input, 30000000).unwrap();
+            let actual = part1::<30000000>(&input).unwrap();
             assert_eq!(actual, expected);
         }
     }
