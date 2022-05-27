@@ -1,13 +1,15 @@
 use std::convert::TryInto;
 
-use aoc_lib::{day, Bench, BenchResult, UserError};
+use aoc_lib::{Bench, BenchResult, Day, UserError};
 use color_eyre::eyre::Result;
 
-day! {
-    day 15: "Rambunctious Recitation"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 15,
+    name: "Rambunctious Recitation",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let numbers: Vec<_> = input
@@ -58,7 +60,7 @@ mod tests_2015 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 15)
+        let input = aoc_lib::input(15)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -77,9 +79,10 @@ mod tests_2015 {
         }
     }
 
+    #[allow(unused)]
     // #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 15)
+        let input = aoc_lib::input(15)
             .example(Example::Part2, 1)
             .open()
             .unwrap();

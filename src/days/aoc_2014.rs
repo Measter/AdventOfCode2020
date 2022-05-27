@@ -1,13 +1,18 @@
-use aoc_lib::{day, parsers::split_pair, Bench, BenchResult, UserError};
-use color_eyre::eyre::{eyre, Result};
+use aoc_lib::{parsers::split_pair, Bench, BenchResult, Day, ParseResult, UserError};
+use color_eyre::{
+    eyre::{eyre, Result},
+    Report,
+};
 
 use std::collections::HashMap;
 
-day! {
-    day 14: "Docking Data"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 14,
+    name: "Docking Data",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[("Parse", run_parse)],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let instructions: Vec<_> = input
@@ -29,6 +34,17 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
         .map_err(UserError)?;
 
     b.bench(|| part2(&instructions))
+}
+
+fn run_parse(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| {
+        let data: Vec<_> = input
+            .lines()
+            .map(str::trim)
+            .map(Instruction::parse)
+            .collect::<Result<_, _>>()?;
+        Ok::<_, Report>(ParseResult(data))
+    })
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -164,7 +180,7 @@ mod tests_2014 {
 
     #[test]
     fn parse_test() {
-        let input = aoc_lib::input(2020, 14)
+        let input = aoc_lib::input(14)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -199,7 +215,7 @@ mod tests_2014 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 14)
+        let input = aoc_lib::input(14)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -218,7 +234,7 @@ mod tests_2014 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 14)
+        let input = aoc_lib::input(14)
             .example(Example::Part2, 1)
             .open()
             .unwrap();

@@ -5,22 +5,26 @@ use std::{
 };
 
 use aoc_lib::{
-    day,
     parsers::{split_pair, unsigned_number},
-    Bench, BenchResult, UserError,
+    Bench, BenchResult, Day, ParseResult, UserError,
 };
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::{
+    eyre::{eyre, Result},
+    Report,
+};
 use itertools::Itertools;
 use nom::{
     bytes::complete::{tag, take_till1},
     sequence::tuple,
 };
 
-day! {
-    day 16: "Ticket Translation"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 16,
+    name: "Ticket Translation",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[("Parse", run_parse)],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let ticket_data = TicketData::parse(input).map_err(UserError)?;
@@ -30,6 +34,13 @@ fn run_part1(input: &str, b: Bench) -> BenchResult {
 fn run_part2(input: &str, b: Bench) -> BenchResult {
     let ticket_data = TicketData::parse(input).map_err(UserError)?;
     b.bench(|| part2(&ticket_data))
+}
+
+fn run_parse(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| {
+        let data = TicketData::parse(input)?;
+        Ok::<_, Report>(ParseResult(data))
+    })
 }
 
 type ValidationInfo<'a> = HashMap<&'a str, [RangeInclusive<u64>; 2]>;
@@ -197,7 +208,7 @@ mod tests_2016 {
 
     #[test]
     fn parse_test() {
-        let input = aoc_lib::input(2020, 16)
+        let input = aoc_lib::input(16)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -224,7 +235,7 @@ mod tests_2016 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 16)
+        let input = aoc_lib::input(16)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -238,7 +249,7 @@ mod tests_2016 {
 
     #[test]
     fn validity_test() {
-        let input = aoc_lib::input(2020, 16)
+        let input = aoc_lib::input(16)
             .example(Example::Part1, 1)
             .open()
             .unwrap();

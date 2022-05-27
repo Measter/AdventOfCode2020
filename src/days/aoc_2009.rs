@@ -1,11 +1,13 @@
-use aoc_lib::{day, Bench, BenchResult, UserError};
+use aoc_lib::{Bench, BenchResult, Day, UserError};
 use color_eyre::eyre::{eyre, Result};
 
-day! {
-    day 9: "Encoding Error"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 9,
+    name: "Encoding Error",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let sequence: Vec<_> = input
@@ -76,10 +78,7 @@ mod tests_2009 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 9)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(9).example(Example::Part1, 1).open().unwrap();
 
         let parsed: Vec<_> = input
             .lines()
@@ -95,10 +94,7 @@ mod tests_2009 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 9)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(9).example(Example::Part1, 1).open().unwrap();
 
         let parsed: Vec<_> = input
             .lines()

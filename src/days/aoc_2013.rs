@@ -1,13 +1,17 @@
-use aoc_lib::{day, parsers::split_pair, Bench, BenchResult, UserError};
-use color_eyre::eyre::{eyre, Result, WrapErr};
+use aoc_lib::{parsers::split_pair, Bench, BenchResult, Day, ParseResult, UserError};
+use color_eyre::{
+    eyre::{eyre, Result, WrapErr},
+    Report,
+};
 
 use std::num::ParseIntError;
-
-day! {
-    day 13: "Shuttle Search"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 13,
+    name: "Shuttle Search",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[("Parse", run_parse)],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let (depart_time, busses) = parse_input(input).map_err(UserError)?;
@@ -19,6 +23,13 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
     let (_, busses) = parse_input(input).map_err(UserError)?;
 
     b.bench(|| part2(&busses))
+}
+
+fn run_parse(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| {
+        let data = parse_input(input)?;
+        Ok::<_, Report>(ParseResult(data))
+    })
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -92,7 +103,7 @@ mod tests_2013 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 13)
+        let input = aoc_lib::input(13)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -106,7 +117,7 @@ mod tests_2013 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 13)
+        let input = aoc_lib::input(13)
             .example(Example::Part2, 1)
             .open()
             .unwrap();
@@ -114,7 +125,7 @@ mod tests_2013 {
         let expecteds = [1068781, 3417, 754018, 779210, 1261476, 1202161486];
 
         for (id, (test, expected)) in inputs.zip(expecteds.iter()).enumerate() {
-            let (_, busses) = parse_input(&test).unwrap();
+            let (_, busses) = parse_input(test).unwrap();
             let actual = part2(&busses).unwrap();
 
             assert_eq!(*expected, actual, "{}", id);

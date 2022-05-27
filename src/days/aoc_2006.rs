@@ -1,13 +1,15 @@
 use std::collections::HashSet;
 
-use aoc_lib::{day, Bench, BenchResult};
+use aoc_lib::{Bench, BenchResult, Day};
 use color_eyre::eyre::Result;
 
-day! {
-    day 6: "Custom Customs"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 6,
+    name: "Custom Customs",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     b.bench(|| part1(input))
@@ -69,10 +71,7 @@ mod tests_2006 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 6)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(6).example(Example::Part1, 1).open().unwrap();
 
         let expected = 11;
         let actual = part1(&input).unwrap();
@@ -82,10 +81,7 @@ mod tests_2006 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 6)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(6).example(Example::Part1, 1).open().unwrap();
 
         let expected = 6;
         let actual = part2(&input).unwrap();

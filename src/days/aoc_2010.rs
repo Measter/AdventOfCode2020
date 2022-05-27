@@ -1,13 +1,15 @@
-use aoc_lib::{day, misc::ArrWindows, Bench, BenchResult, UserError};
+use aoc_lib::{misc::ArrWindows, Bench, BenchResult, Day, UserError};
 use color_eyre::eyre::Result;
 
 use std::collections::HashMap;
 
-day! {
-    day 10: "Adapter Array"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 10,
+    name: "Adapter Array",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let mut adaptors: Vec<_> = input
@@ -81,7 +83,7 @@ mod tests_2010 {
 
     #[test]
     fn part1_example1() {
-        let input = aoc_lib::input(2020, 10)
+        let input = aoc_lib::input(10)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -93,7 +95,7 @@ mod tests_2010 {
             .collect::<Result<_, ParseIntError>>()
             .unwrap();
 
-        adaptors.sort();
+        adaptors.sort_unstable();
 
         let expected = 35;
         let actual = part1(&adaptors).unwrap();
@@ -103,7 +105,7 @@ mod tests_2010 {
 
     #[test]
     fn part1_example2() {
-        let input = aoc_lib::input(2020, 10)
+        let input = aoc_lib::input(10)
             .example(Example::Part1, 2)
             .open()
             .unwrap();
@@ -115,7 +117,7 @@ mod tests_2010 {
             .collect::<Result<_, ParseIntError>>()
             .unwrap();
 
-        adaptors.sort();
+        adaptors.sort_unstable();
 
         let expected = 220;
         let actual = part1(&adaptors).unwrap();
@@ -125,7 +127,7 @@ mod tests_2010 {
 
     #[test]
     fn part2_example1() {
-        let input = aoc_lib::input(2020, 10)
+        let input = aoc_lib::input(10)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -137,7 +139,7 @@ mod tests_2010 {
             .collect::<Result<_, ParseIntError>>()
             .unwrap();
 
-        adaptors.sort();
+        adaptors.sort_unstable();
 
         let expected = 8;
         let actual = part2(&adaptors).unwrap();
@@ -147,7 +149,7 @@ mod tests_2010 {
 
     #[test]
     fn part2_example2() {
-        let input = aoc_lib::input(2020, 10)
+        let input = aoc_lib::input(10)
             .example(Example::Part1, 2)
             .open()
             .unwrap();
@@ -159,7 +161,7 @@ mod tests_2010 {
             .collect::<Result<_, ParseIntError>>()
             .unwrap();
 
-        adaptors.sort();
+        adaptors.sort_unstable();
 
         let expected = 19208;
         let actual = part2(&adaptors).unwrap();

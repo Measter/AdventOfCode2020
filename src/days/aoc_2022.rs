@@ -3,14 +3,16 @@ use std::{
     num::ParseIntError,
 };
 
-use aoc_lib::{day, parsers::split_pair, Bench, BenchResult, UserError};
+use aoc_lib::{parsers::split_pair, Bench, BenchResult, Day, ParseResult, UserError};
 use color_eyre::{eyre::Result, Report};
 
-day! {
-    day 22: "Crab Combat"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 22,
+    name: "Crab Combat",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[("Parse", run_parse)],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let (p1_deck, p2_deck) = parse_input(input).map_err(UserError)?;
@@ -22,6 +24,13 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
     let (p1_deck, p2_deck) = parse_input(input).map_err(UserError)?;
 
     b.bench(|| Ok::<_, Report>(play_part2(p1_deck.clone(), p2_deck.clone())?.1))
+}
+
+fn run_parse(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| {
+        let data = parse_input(input)?;
+        Ok::<_, Report>(ParseResult(data))
+    })
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -164,7 +173,7 @@ mod tests_2022 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 22)
+        let input = aoc_lib::input(22)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -178,7 +187,7 @@ mod tests_2022 {
 
     #[test]
     fn part2_example_infinite_loop_test() {
-        let input = aoc_lib::input(2020, 22)
+        let input = aoc_lib::input(22)
             .example(Example::Part2, 1)
             .open()
             .unwrap();
@@ -190,7 +199,7 @@ mod tests_2022 {
 
     #[test]
     fn part2_example2() {
-        let input = aoc_lib::input(2020, 22)
+        let input = aoc_lib::input(22)
             .example(Example::Part2, 2)
             .open()
             .unwrap();

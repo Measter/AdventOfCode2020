@@ -1,11 +1,16 @@
-use aoc_lib::{day, Bench, BenchResult, NoError, UserError};
-use color_eyre::eyre::{eyre, Result};
+use aoc_lib::{Bench, BenchResult, Day, NoError, ParseResult, UserError};
+use color_eyre::{
+    eyre::{eyre, Result},
+    Report,
+};
 
-day! {
-    day 11: "Seating System"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 11,
+    name: "Seating System",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[("Parse", run_parse)],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let floor = WaitingArea::parse(input).map_err(UserError)?;
@@ -24,6 +29,13 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
         let mut floor = floor.clone();
         floor.run(WaitingArea::count_neighbours_part2, 5);
         Ok::<_, NoError>(floor.occupied_seats())
+    })
+}
+
+fn run_parse(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| {
+        let data = WaitingArea::parse(input)?;
+        Ok::<_, Report>(ParseResult(data))
     })
 }
 
@@ -57,9 +69,7 @@ struct WaitingArea {
 
 impl WaitingArea {
     fn parse(input: &str) -> Result<WaitingArea> {
-        let width = input
-            .find(['\n', '\r'].as_ref())
-            .unwrap_or_else(|| input.len());
+        let width = input.find(['\n', '\r'].as_ref()).unwrap_or(input.len());
 
         let floor_space: Vec<_> = input
             .lines()
@@ -209,11 +219,11 @@ mod tests_2011 {
 
     #[test]
     fn step_test() {
-        let start_input = aoc_lib::input(2020, 11)
+        let start_input = aoc_lib::input(11)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
-        let end_input = aoc_lib::input(2020, 11)
+        let end_input = aoc_lib::input(11)
             .example(Example::Part1, 2)
             .open()
             .unwrap();
@@ -232,11 +242,11 @@ mod tests_2011 {
 
     #[test]
     fn part1_example_full_run() {
-        let input = aoc_lib::input(2020, 11)
+        let input = aoc_lib::input(11)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
-        let end_input = aoc_lib::input(2020, 11)
+        let end_input = aoc_lib::input(11)
             .example(Example::Part1, 3)
             .open()
             .unwrap();
@@ -257,11 +267,11 @@ mod tests_2011 {
 
     #[test]
     fn part2_example_full_run() {
-        let input = aoc_lib::input(2020, 11)
+        let input = aoc_lib::input(11)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
-        let end_input = aoc_lib::input(2020, 11)
+        let end_input = aoc_lib::input(11)
             .example(Example::Part2, 1)
             .open()
             .unwrap();

@@ -1,11 +1,16 @@
-use aoc_lib::{day, Bench, BenchResult, UserError};
-use color_eyre::eyre::{eyre, Result};
+use aoc_lib::{Bench, BenchResult, Day, ParseResult, UserError};
+use color_eyre::{
+    eyre::{eyre, Result},
+    Report,
+};
 
-day! {
-    day 3: "Toboggan Trajectory"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 3,
+    name: "Toboggan Trajectory",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[("Parse", run_parse)],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let map = Map::parse(input).map_err(UserError)?;
@@ -17,6 +22,13 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
     let map = Map::parse(input).map_err(UserError)?;
 
     b.bench(|| part2(&map))
+}
+
+fn run_parse(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| {
+        let data = Map::parse(input)?;
+        Ok::<_, Report>(ParseResult(data))
+    })
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -92,10 +104,7 @@ mod tests_2003 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 3)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(3).example(Example::Part1, 1).open().unwrap();
         let map = Map::parse(&input).unwrap();
 
         assert_eq!(7, map.count_trees(3, 1).unwrap());
@@ -103,10 +112,7 @@ mod tests_2003 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 3)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(3).example(Example::Part1, 1).open().unwrap();
 
         let slopes = [
             ((1, 1), 2),

@@ -1,14 +1,19 @@
 use std::num::ParseIntError;
 
-use aoc_lib::{day, parsers::split_pair, Bench, BenchResult, NoError, UserError};
-use color_eyre::eyre::{eyre, Result};
+use aoc_lib::{parsers::split_pair, Bench, BenchResult, Day, NoError, ParseResult, UserError};
+use color_eyre::{
+    eyre::{eyre, Result},
+    Report,
+};
 use nom::bytes::complete::take_while;
 
-day! {
-    day 4: "Passport Processing"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 4,
+    name: "Passport Processing",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[("Parse", run_parse)],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let passports = Passport::parse_passports(input).map_err(UserError)?;
@@ -20,6 +25,13 @@ fn run_part2(input: &str, b: Bench) -> BenchResult {
     let passports = Passport::parse_passports(input).map_err(UserError)?;
 
     b.bench(|| Ok::<_, NoError>(passports.iter().filter(|p| p.is_valid_part2()).count()))
+}
+
+fn run_parse(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| {
+        let data = Passport::parse_passports(input)?;
+        Ok::<_, Report>(ParseResult(data))
+    })
 }
 
 #[derive(Debug, PartialEq, Default)]
@@ -128,10 +140,7 @@ mod tests_2004 {
 
     #[test]
     fn parse_test() {
-        let input = aoc_lib::input(2020, 4)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(4).example(Example::Part1, 1).open().unwrap();
 
         let expected = [
             Passport {
@@ -182,10 +191,7 @@ mod tests_2004 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 4)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(4).example(Example::Part1, 1).open().unwrap();
 
         let passports = Passport::parse_passports(&input).unwrap();
 

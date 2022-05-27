@@ -1,18 +1,23 @@
 use std::collections::{HashMap, HashSet};
 
-use aoc_lib::{day, parsers::unsigned_number, Bench, BenchResult, UserError};
-use color_eyre::eyre::{eyre, Result};
+use aoc_lib::{parsers::unsigned_number, Bench, BenchResult, Day, ParseResult, UserError};
+use color_eyre::{
+    eyre::{eyre, Result},
+    Report,
+};
 use nom::{
     bytes::complete::{tag, take_until},
     error::ErrorKind,
     sequence::tuple,
 };
 
-day! {
-    day 7: "Handy Haversacks"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 7,
+    name: "Handy Haversacks",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[("Parse", run_parse)],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let rules = parse_bags(input).map_err(UserError)?;
@@ -22,6 +27,13 @@ fn run_part1(input: &str, b: Bench) -> BenchResult {
 fn run_part2(input: &str, b: Bench) -> BenchResult {
     let rules = parse_bags(input).map_err(UserError)?;
     b.bench(|| part2(&rules, "shiny gold"))
+}
+
+fn run_parse(input: &str, b: Bench) -> BenchResult {
+    b.bench(|| {
+        let data = parse_bags(input)?;
+        Ok::<_, Report>(ParseResult(data))
+    })
 }
 
 fn parse_bags(input: &str) -> Result<HashMap<&str, HashMap<&str, usize>>> {
@@ -93,10 +105,7 @@ mod tests_2007 {
 
     #[test]
     fn parse_test() {
-        let input = aoc_lib::input(2020, 7)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(7).example(Example::Part1, 1).open().unwrap();
 
         let expected = hashmap! {
             "light red" => hashmap!{
@@ -137,10 +146,7 @@ mod tests_2007 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 7)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(7).example(Example::Part1, 1).open().unwrap();
         let bags = parse_bags(&input).unwrap();
 
         let expected = 4;
@@ -151,10 +157,7 @@ mod tests_2007 {
 
     #[test]
     fn part2_example1() {
-        let input = aoc_lib::input(2020, 7)
-            .example(Example::Part1, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(7).example(Example::Part1, 1).open().unwrap();
         let bags = parse_bags(&input).unwrap();
 
         let expected = 32;
@@ -165,10 +168,7 @@ mod tests_2007 {
 
     #[test]
     fn part2_example2() {
-        let input = aoc_lib::input(2020, 7)
-            .example(Example::Part2, 1)
-            .open()
-            .unwrap();
+        let input = aoc_lib::input(7).example(Example::Part2, 1).open().unwrap();
         let bags = parse_bags(&input).unwrap();
 
         let expected = 126;

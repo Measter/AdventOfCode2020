@@ -4,15 +4,17 @@ use std::{
     ops::{IndexMut, RangeInclusive},
 };
 
-use aoc_lib::{day, Bench, BenchResult, NoError, UserError};
+use aoc_lib::{Bench, BenchResult, Day, NoError, UserError};
 use color_eyre::eyre::Result;
 use itertools::iproduct;
 
-day! {
-    day 17: "Conway Cubes"
-    1: run_part1
-    2: run_part2
-}
+pub const DAY: Day = Day {
+    day: 17,
+    name: "Conway Cubes",
+    part_1: run_part1,
+    part_2: Some(run_part2),
+    other: &[],
+};
 
 fn run_part1(input: &str, b: Bench) -> BenchResult {
     let state = parse::<[i8; 3]>(input).map_err(UserError)?;
@@ -155,7 +157,7 @@ mod tests_2017 {
 
     #[test]
     fn part1_example() {
-        let input = aoc_lib::input(2020, 17)
+        let input = aoc_lib::input(17)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
@@ -174,7 +176,7 @@ mod tests_2017 {
 
     #[test]
     fn part2_example() {
-        let input = aoc_lib::input(2020, 17)
+        let input = aoc_lib::input(17)
             .example(Example::Part1, 1)
             .open()
             .unwrap();
